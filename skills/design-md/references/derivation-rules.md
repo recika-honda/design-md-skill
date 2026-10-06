@@ -1,9 +1,11 @@
 # Derivation rules: how a full token set is computed from a few chosen values
 
-Read by SKILL.md Step 5 when filling `# derived` tokens. Every derived value in a DESIGN.md
-cites one row of this file by section number (e.g. `# derived: M3 tone T90, sec.1`). Values
-with no row here are not derived; they become `TODO: decide`. Rows marked "unverified" may
-be used only as a stated input choice, never as a rule citation.
+Read by SKILL.md Step 5 when filling `# derived` and `# defaulted` tokens. Every derived
+value in a DESIGN.md cites one row of sec.1-7 or sec.9 by section number (e.g.
+`# derived: M3 tone T90, sec.1`). A value taken from sec.8 is never `derived`: it is
+`# defaulted: <row>, sec.8`, because sec.8 records this skill's taste, not a public rule.
+Values with no row here become `TODO: decide`. Rows marked "unverified" may be used only as
+a stated `defaulted` choice, never as a rule citation.
 
 Compiled 2026-10-05 (JST). Format: RULE -> VALUE(S) -> SOURCE. "unverified" = no primary source reached.
 Abbrevs: MCU = https://github.com/material-foundation/material-color-utilities (typescript/dynamiccolor/color_spec_2021.ts, dart/lib/scheme/scheme_tonal_spot.dart, dart/lib/dynamiccolor/dynamic_scheme.dart; raw.githubusercontent.com/material-foundation/material-color-utilities/main/...)
@@ -144,56 +146,66 @@ Don't:
 Other published agent guideline docs found: Vercel Web Interface Guidelines (URL in sec. 6). Any others: not searched beyond that [unverified existence].
 
 ## 8. Skill defaults (choices this skill makes where no public rule exists)
-These are NOT rules; they are the skill's own fixed choices, so a DESIGN.md can cite them as
-`# chosen: skill default, sec.8` instead of inventing a value silently. Change them here,
-not per file.
+These are NOT rules; they are the skill's own fixed choices. A DESIGN.md cites them as
+`# defaulted: <row>, sec.8` instead of inventing a value silently. Every row yields: a value
+the user chose (a pick, a site's measured value in facts.txt, typed input) or a reason
+recorded in Intent replaces it. One exception: the row marked "(Hard Baseline)" is a floor
+the skill owner promoted, and it does not yield. When a pick triggers a row (the user picked "a giant thin
+wordmark", the skill supplies 96px), the value is still `defaulted` and names the pick:
+`# defaulted: wordmark 96px, sec.8; for pick "giant thin wordmark", site 2`.
+Change rows here, not per file.
 | Default | Value | Why this value |
-| Japanese body line-height | body-lg 1.75; body-md 1.7 | CJK glyphs are square and dense; 1.5 (M3 Latin, sec.2) reads cramped. 1.75 already exceeds the 1.4.12 test value of 1.5, and the layout must still survive a user override down to 1.5. Source: skill choice, unverified against a CJK typography standard |
+| Japanese body line-height | body-lg 1.75 is `derived` from DADS Std-16 170-175% (sec.9); body-md 1.7 is `defaulted` here | CJK glyphs are square and dense; M3's Latin 1.5 (sec.2) reads cramped. 1.75 exceeds the WCAG 1.4.12 test value of 1.5, and the layout must still survive a user override down to 1.5. The 14px value has no DADS row; 1.7 is the skill's choice |
 | Oversized wordmark (display-lg) | 96px base, weight 300, tracking -0.02em, line-height 1.0 | A name-as-hero needs tighter tracking than M3's -0.25px absolute (sec.2) gives at that size; -0.02em is the skill's choice |
 | Section padding by spacing feel | tight 48px, normal 64px, airy 96px | Tailwind steps 12 / 16 / 24 (sec.3); the feel-to-step mapping is the skill's choice (sec.3 marks it unverified) |
 | Radius scale by shape feel | sharp: 0 / 4 / 8 / 12; soft: 8 / 12 / 16 / 28; round: 16 / 28 / 28 / 9999 for sm / md / lg / xl | rows of the M3 shape scale (sec.4); the feel-to-row mapping is the skill's choice |
 | Scroll reveal | translate 16px, 300ms, M3 standard-decelerate, stagger 60ms, max 5 children, once | 300ms = M3 medium2 (sec.5); offset and stagger are the skill's choice |
 | Modal scrim opacity | 50% of `scrim` (black) | M3 gives scrim tone 0 (sec.1) and no opacity; 50% is the skill's choice |
 | Nav height | 72px | between Material's 64 and a 80px marketing bar; the skill's choice |
-| Case card width | 360px desktop, 320px tablet, 280px mobile | three cards plus 24px gaps take 1128px of a 1280 container, leaving a 150px slice of the fourth card visible so the rail reads as scrollable; the skill's choice |
-| Container and side margins | container 1120px; page margin clamp(24px, 6vw, 96px) on each side; at 1440 the centered container leaves 160px a side, at 1280 80px | a 1280 container leaves only 80px a side at 1440, which reads as cramped; the skill's choice. Override only with a creative intent recorded in Intent |
-| Section rhythm | desktop: every band below the hero shares one height = the tallest band's natural height rounded up to 8px (default 960px, a standard inquiry form), equal `section` padding, heading + content grouped in the vertical middle; phones: natural height. Adjacent bands alternate background; one alignment axis per section; a lone sentence joins a neighboring section; content under half the band height is enlarged, not the band shrunk | equal section heights give the page a steady visual rhythm; a 560px min-height with tiny centered content looked like it was floating, so the floor, axis, and content-size rules come with it; the skill's choice |
-| Display lines and heading wrap | display-size lines use the full container; headings use `word-break: auto-phrase` + `text-wrap: balance`; a heading that still orphans in a narrow card steps down one type role on phones | without these rules a 57px statement in the 740px column and a card title at 390px each ended in a lone final kana and period; the skill's choice |
+| Container and side margins | container 1120px; page margin clamp(24px, 6vw, 96px) on each side; at 1440 the centered container leaves 160px a side, at 1280 80px | a 1280 container leaves only 80px a side at 1440, which reads as cramped; the skill's choice. A container width the user picked from a site (facts.txt container widths) replaces it |
+| Section rhythm (principle, no fixed value) | the size of each section sets the reader's rhythm: equal sizes read as a steady march, a deliberate change in size reads as a pause or an emphasis. Decide the rhythm from the picks (a site's section order and proportions) and write it down in Page Structure; never let it fall out of whatever content each band happens to hold | a first build whose bands ran 256 to 914px tall read as uneven because the sizes were accidental, not chosen; the skill's choice. No height value is imposed |
+| Alignment axis per section | grid sections (cards, rails, multi-column) align to the container's left edge; reading sections (statements, long copy, FAQ, forms) put heading and content in the centered reading column; a section uses one of the two, never both | mixed axes inside one band read as misaligned in the first build; the skill's choice |
+| Lone sentence | a single statement or call-to-action line opens or closes a neighboring section instead of forming its own band | a one-line band read as an empty gap; the skill's choice |
+| Display lines | display-size lines (display-md and up, short statements) use the full container, not the reading column, so a one-line statement stays on one line | without these rules a 57px statement in the 740px column and a card title at 390px each ended in a lone final kana and period; the skill's choice |
+| Japanese heading wrap (Hard Baseline) | headings use `word-break: auto-phrase` + `text-wrap: balance`; no heading ends in a one- or two-character orphan; a heading that still orphans in a narrow card steps down one type role on phones | applies to every Japanese site whatever the style, so the template places it in Hard Baseline; the skill's choice |
 | Grid gutter | 24px | DADS asks 2 x body size (32px at 16px, sec.9); 24px is Tailwind step 6 (sec.3) and the gutter the sec.9 offset-column widths are computed with; the skill's choice |
 | Line length cap for CJK | 40em | sec.2 gives "under 80 characters" for Latin (Anthropic); a full-width character is roughly two Latin characters wide; the skill's choice |
 
-## 9. Baseline rules from the Digital Agency Design System (DADS)
-Source: https://design.digital.go.jp/dads/ (beta v2.18.0, read 2026-10-06). These feed the
-`## Baseline` section every DESIGN.md carries regardless of style. Cite as `DADS <page>`.
-Where DADS gives no number (container px, page margin px, reading line length, section
-padding, motion), the baseline falls back to sec.3 / sec.8 and says so.
-| Rule | Value | DADS page |
-| Fluid layout; never hide a needed horizontal scrollbar | `リキッドレイアウト`; `横スクロールバーを隠さない` | foundations/layout/accessibility/ |
-| 12-column grid; content sits in column spans | 12 columns | foundations/layout/ |
-| Reading / article / FAQ / form blocks use a centered offset column | 8 cols with 2-col offset, or 6 cols with 3-col offset (`記事や読み物など ... カラムオフセット`) | foundations/layout/ |
-| Gutter | 2 x body text size (`本文の文字サイズの2倍`) | foundations/layout/ |
-| Keep the page margin at narrow widths | `ページ幅が狭くなった場合も ... マージンの余白を確保` | foundations/layout/ |
-| Breakpoint | 768px: below = mobile/tablet, at or above = desktop | foundations/layout/ |
-| Spacing scale | 3 to 5 steps on a modular scale; same value for the same kind of element; larger for more important | foundations/spacing/ |
-| Body and UI text size | 16 CSS px minimum; 14px only for footer and constrained UI (`基本的には使用しません`) | foundations/typography/ |
-| Body line-height | at least 1.5 x; Std-16 170-175%, Std-17 170%, Std-18 160%, Std-20 to 32 150%, Dsp 140% | foundations/typography/ |
-| Letter-spacing | 0 / 0.01em / 0.02em only | foundations/typography/ |
-| Italic for Japanese | avoid | foundations/typography/ |
-| Heading level vs size | defined separately; one h1 per page | components/heading/ |
-| Contrast | text 4.5:1 always; non-text UI and borders 3:1; a drop shadow never counts as contrast | foundations/color/, foundations/elevation/ |
-| Meaning never by color alone | links underlined; button importance by shape | foundations/link-text/, components/button/accessibility/ |
-| Focus indicator | visible on every interactive element; DADS default is a yellow + black double ring (`いかなる場合も変更してはいけません` for government sites) | foundations/color/ |
-| Touch target | 44 x 44 CSS px minimum, no overlap with neighbors | components/button/accessibility/ |
-| Button heights | 56 / 48 / 36 / 28; one primary per screen; confirm right, cancel left (desktop); avoid disabled buttons | components/button/ |
-| Form labels | visible label above the field; support text gives format or example; `※必須` / `※任意` marker; placeholder never used as the label (`プレースホルダーテキストを使用してはなりません`) | components/input-text/usage/ |
-| Field width | matches the expected input length (`入力内容に相応しい長さ`); input height 48 Medium (56 / 36) | components/input-text/usage/ |
-| Error text | static, begins with `＊`, states the cause and the fix; not announced via aria-live | components/input-text/usage/, /accessibility/ |
-| Form bans | no maxlength, no copy or paste ban, no split email field, no disabled or readonly fields | components/input-text/accessibility/ |
-| Choice controls | radio for single choice (5 or fewer options), checkbox left of its label, optional radio groups need a "none" option | components/radio/, /checkbox/, /select/ |
-| FAQ accordion | 2 or more items, header = question, important information never hidden, no nesting, built on `<details>` + `<summary>` | components/accordion/, /disclosure/ |
-| Elevation | default level 0; hover at least one level up; dialogs at least two | foundations/elevation/ |
-| Radius steps | none 0 / small 8 / medium 12-16 / large 16-32 / full | foundations/corner-shapes/ |
-| Accessibility target | JIS X 8341-3:2016 level AA (`適合レベルAAに準拠`) | webaccessibility/ |
+## 9. Digital Agency Design System (DADS): hard floors and layout heuristics
+Source: https://design.digital.go.jp/dads/ (beta v2.18.0, read 2026-10-06). Cite as
+`DADS <page>`. DADS mixes two kinds of rule, and the template keeps them apart. Rows marked
+H are accessibility and safety floors: they feed `## Hard Baseline` and hold whatever the
+style. Rows marked L are one government design system's layout and style conventions: they
+feed `## Layout Heuristics`, apply only where the user's picks are silent, and yield to a
+chosen value or to Intent. Where DADS gives no number (container px, page margin px,
+reading line length, section padding, motion), the heuristics fall back to sec.3 / sec.8.
+| Rule | Value | DADS page | Kind |
+| Fluid layout; never hide a needed horizontal scrollbar | `リキッドレイアウト`; `横スクロールバーを隠さない` | foundations/layout/accessibility/ | H |
+| 12-column grid; content sits in column spans | 12 columns | foundations/layout/ | L |
+| Reading / article / FAQ / form blocks use a centered offset column | 8 cols with 2-col offset, or 6 cols with 3-col offset (`記事や読み物など ... カラムオフセット`) | foundations/layout/ | L |
+| Gutter | 2 x body text size (`本文の文字サイズの2倍`) | foundations/layout/ | L |
+| Keep the page margin at narrow widths | `ページ幅が狭くなった場合も ... マージンの余白を確保` | foundations/layout/ | H |
+| Breakpoint | 768px: below = mobile/tablet, at or above = desktop | foundations/layout/ | L |
+| Spacing scale | 3 to 5 steps on a modular scale; same value for the same kind of element; larger for more important | foundations/spacing/ | L |
+| Body and UI text size | 16 CSS px minimum; 14px only for footer and constrained UI (`基本的には使用しません`) | foundations/typography/ | H |
+| Body line-height | at least 1.5 x; Std-16 170-175%, Std-17 170%, Std-18 160%, Std-20 to 32 150%, Dsp 140% | foundations/typography/ | H |
+| Letter-spacing | 0 / 0.01em / 0.02em only | foundations/typography/ | L |
+| Italic for Japanese | avoid | foundations/typography/ | L |
+| Heading level vs size | defined separately; one h1 per page | components/heading/ | H |
+| Contrast | text 4.5:1 always; non-text UI and borders 3:1; a drop shadow never counts as contrast | foundations/color/, foundations/elevation/ | H |
+| Meaning never by color alone | links underlined; button importance by shape | foundations/link-text/, components/button/accessibility/ | H |
+| Focus indicator | visible on every interactive element; DADS default is a yellow + black double ring (`いかなる場合も変更してはいけません` for government sites) | foundations/color/ | H |
+| Touch target | 44 x 44 CSS px minimum, no overlap with neighbors | components/button/accessibility/ | H |
+| Button heights | 56 / 48 / 36 / 28; one primary per screen; confirm right, cancel left (desktop); avoid disabled buttons | components/button/ | L |
+| Form labels | visible label above the field; support text gives format or example; `※必須` / `※任意` marker; placeholder never used as the label (`プレースホルダーテキストを使用してはなりません`) | components/input-text/usage/ | H |
+| Field width | matches the expected input length (`入力内容に相応しい長さ`); input height 48 Medium (56 / 36) | components/input-text/usage/ | L |
+| Error text | static, begins with `＊`, states the cause and the fix; not announced via aria-live | components/input-text/usage/, /accessibility/ | H |
+| Form bans | no maxlength, no copy or paste ban, no split email field, no disabled or readonly fields | components/input-text/accessibility/ | H |
+| Choice controls | radio for single choice (5 or fewer options), checkbox left of its label, optional radio groups need a "none" option | components/radio/, /checkbox/, /select/ | L |
+| FAQ accordion | 2 or more items, header = question, important information never hidden, no nesting, built on `<details>` + `<summary>` | components/accordion/, /disclosure/ | H |
+| Elevation | default level 0; hover at least one level up; dialogs at least two | foundations/elevation/ | L |
+| Radius steps | none 0 / small 8 / medium 12-16 / large 16-32 / full | foundations/corner-shapes/ | L |
+| Accessibility target | JIS X 8341-3:2016 level AA (`適合レベルAAに準拠`) | webaccessibility/ | H |
 Derived px for the offset columns in the default 1120 container with 24px gutters (sec.8):
 column = (1120 - 11 x 24) / 12 = 71.33px; 8 columns + 7 gutters = 738.7px; 6 columns + 5
 gutters = 548px. Rounded to the 4px grid: `content-wide` 740px, `content-narrow` 548px, both
@@ -207,11 +219,11 @@ Input: {primary hex, secondary hex|none, heading font, body font, spacing feel t
 4. Contrast verification: compute ratio for every on-X/X pair; require >= 4.5:1 text, >= 3:1 large text and UI boundaries (outline, focus ring). Do not round. [WCAG 1.4.3, 1.4.11]. If the user's exact brand hex fails, record it as a brand swatch and use the tone-derived role for text.
 5. States: hover = overlay of the role's on-color at 8%; focus 12%; pressed 12%; dragged 16%; disabled content on-surface 38%, disabled container on-surface 12%. [MW state tokens]. Alternative step-based mapping: Radix steps 3/4/5, 9/10. [sec.1]
 6. Focus ring: 2px, >= 3:1 against adjacent colors, never outline:none without replacement; use :focus-visible. [2.4.13, 2.4.7, MW 2px, Vercel]
-7. Typography: set base 16px. Use the M3 role table (sec.2) as default sizes/line-heights; optional alternative = modular scale from typescale.com ratio on 16px base (ratio selection by mood is unverified; state it as a chosen input, not a rule). Heading face -> display/headline/title slots; body face -> body/label slots. Body line-height 1.5 for Latin; Japanese body uses the sec.8 default (1.75 / 1.7). Headings 1.0-1.25 ranges observed in M3/Tailwind. Max line length < 80 chars. Ensure layout survives 1.4.12 spacing overrides.
-8. Spacing: base unit 4px (Tailwind --spacing). Scale steps 4,8,12,16,24,32,48,64,96. Feel mapping: the sec.8 skill default (tight 48 / normal 64 / airy 96), cited as `chosen: skill default, sec.8`.
-9. Radii: sharp = M3 none/extra-small (0/4); soft = small/medium/large (8/12/16); round = large/extra-large/full (16/28/9999). Mapping of feel to scale rows is a choice over sourced scales [M3 shape, Tailwind radius].
+7. Typography: set base 16px. Use the M3 role table (sec.2) as default sizes/line-heights; optional alternative = modular scale from typescale.com ratio on 16px base (ratio selection by mood is unverified; state it as a chosen input, not a rule). Heading face -> display/headline/title slots; body face -> body/label slots. Body line-height 1.5 for Latin; Japanese body-lg 1.75 (DADS Std-16, sec.9), body-md 1.7 (sec.8 default). Headings 1.0-1.25 ranges observed in M3/Tailwind. Max line length < 80 chars. Ensure layout survives 1.4.12 spacing overrides.
+8. Spacing: base unit 4px (Tailwind --spacing). Scale steps 4,8,12,16,24,32,48,64,96. Feel mapping: the sec.8 skill default (tight 48 / normal 64 / airy 96), cited as `defaulted: section padding by feel, sec.8` with the user's feel answer named.
+9. Radii: sharp = M3 none/extra-small (0/4); soft = small/medium/large (8/12/16); round = large/extra-large/full (16/28/9999). The values are M3 rows (`derived`, sec.4); which row a feel maps to is the sec.8 default, so name it in the comment.
 10. Elevation: levels 0-5 = 0,1,3,6,8,12 dp; CSS via the Tailwind shadow-xs..xl rows or M3 key-shadow (sec.4). In dark mode raise surface-container tone with level in addition to shadow.
-11. Breakpoints: Tailwind 640/768/1024/1280/1536, or window classes 600/840/1200/1600. Container max-width: 1120px skill default (sec.8); Tailwind 1280 (7xl) or Bootstrap 1320 only when Intent records a reason.
+11. Breakpoints: Tailwind 640/768/1024/1280/1536, or window classes 600/840/1200/1600. Container max-width: a width the user picked from a site (`chosen`), else 1120px (`defaulted`, sec.8).
 12. Motion: durations from M3 tokens (feedback 50-200ms short; transitions 250-400ms medium; larger/page 450-600ms long); easing standard (0.2,0,0,1), decelerate for enter (0,0,0,1), accelerate for exit (0.3,0,1,1); emphasized for hero moments. Duration-to-element mapping is unverified. Add @media (prefers-reduced-motion: reduce) removing decorative motion, keeping feedback. Animate only transform/opacity; no transition: all.
 13. Accessibility block: contrast 4.5/3/3; min target 24x24 (AA) with 44 (WCAG AAA / Apple) and 48 (Material) as comfortable defaults; focus rules; reflow 320px; resize 200%; text-spacing survival; reduced motion.
-14. Do/Don't block: copy sec.7 rows verbatim; add the mood words as the "memorable thing" (spend boldness once).
+14. Do/Don't block: rules from picks and rejections first; then the sec.7 rows that fit, each tagged `(skill heuristic)`; the Step 0 "memorable thing" answer becomes the one place boldness is spent.

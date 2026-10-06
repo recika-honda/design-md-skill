@@ -1,4 +1,4 @@
-# DESIGN.md output template, token sourcing, and the richness bar
+# DESIGN.md output template, token sourcing, and the completeness bar
 
 Read by SKILL.md Step 5. Format follows the Google design.md spec (alpha):
 https://github.com/google-labs-code/design.md (docs/spec.md). Front matter holds tokens,
@@ -8,49 +8,63 @@ this skill add `elevation`, `motion`, `breakpoints` groups and its own body sect
 
 Language: English body. The `Brief (Japanese)` section is the signed-off brief, verbatim.
 
-## The richness bar
+## The completeness bar
 
-A finished file is 350 to 700 lines (a fully filled file lands near the top of that range;
-the ceiling exists to stop padding, not to cut substance). The reference points are the Airbnb (545 lines),
-Stripe (487) and Linear (548) files in VoltAgent/awesome-design-md: 13-23 color roles,
-13-19 type roles, 15-38 component entries with state siblings, a responsive table, and
-either Do's and Don'ts plus an Iteration Guide (Stripe, Linear) or Known Gaps (Airbnb,
-Linear). This template requires all three closing sections.
-Thin output is a failure even when every line in it is correct. Concretely, the file must
-have, at minimum:
+Quality is measured by what the file lets a builder do, not by its length. A file passes
+when every item below is present and filled with substance (no section one-lined, no
+`<...>` left). Most complete files land between 200 and 700 lines; that range is a sanity
+check, never a target. Under 200 usually means a section was one-lined; over 700 usually
+means padding or components the site does not have.
 
-- 24 color roles (brand, surfaces, text, borders, semantic, state variants, scrim).
-- 9 typography roles across display / headline / title / body / label.
-- Spacing scale of 8 steps plus `section`, `gutter`, `container`.
-- Elevation levels 0 to 5 with CSS shadow values.
-- Motion durations (short / medium / long) and 3 easings.
-- Breakpoints (4) and a responsive table with one row per breakpoint.
-- Every component the user picked, plus the 6 base components every site needs
-  (button-primary, button-secondary, text-input, card, nav, footer), each with hover,
-  focus, active, disabled where the element is interactive.
-- Interaction state matrix, Motion, Imagery & Iconography, Voice & Content,
-  Accessibility, Do's and Don'ts, Known Gaps: none may be skipped or one-lined.
+The file must have:
 
-## Token sourcing: three tiers, never a fourth
+- The full color role set derived from the chosen primary (brand, containers and on-colors,
+  surfaces, text, borders, semantic, state variants, scrim, focus ring): roughly 24 roles.
+- Type roles across display / headline / title / body / label: at least 9.
+- A spacing scale of 8 steps plus `section`, `gutter`, `container`.
+- Elevation levels 0 to 5 with CSS shadow values; motion durations (short / medium / long)
+  and 3 easings; 4 breakpoints and a responsive table with one row per breakpoint.
+- Components that exist on THIS site: the ones the user picked, plus the ones the Page
+  Structure actually uses. `nav`, `footer`, and `button-primary` are on almost every site;
+  `button-secondary`, `text-input`, `card` and the rest appear only when Page Structure has
+  them. Never write a component the site will not have. Interactive components carry
+  hover, focus, active, disabled siblings.
+- Interaction state matrix, Motion, Imagery & Iconography, Voice & Content, Accessibility,
+  Do's and Don'ts, Known Gaps: none skipped or one-lined.
+- Every chosen, derived and defaulted token traced (tier comment), every open token listed
+  in Known Gaps with the question the owner must answer.
 
-Every token value carries its tier in a trailing comment.
+## Token sourcing: four tiers, never a fifth
+
+Every token value carries its tier in a trailing comment. The tier belongs to the VALUE, not
+to the attribute: the user may choose "a giant thin wordmark", but if the 96px comes from
+this skill's defaults, the 96px is `defaulted`, and its comment names the pick.
 
 | Tier | When | Comment form |
 |---|---|---|
-| chosen | the user picked this attribute on a site, or typed a value or preference | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
-| derived | computed from chosen values by a public rule in `references/derivation-rules.md` | `# derived: <rule>, sec.N` e.g. `# derived: M3 tone T90, sec.1` |
-| open | no chosen input and no rule can bridge the gap | in `colors` / `typography` / `spacing` / `rounded`: OMIT the key and leave a comment line `# <key>: open (TODO: decide), see Known Gaps` (the linter rejects a placeholder value); in body prose: the literal `TODO: decide` |
+| chosen | the user picked this attribute on a site and the value is that site's (from facts.txt or the screenshot), or the user typed the value | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
+| derived | computed mechanically from chosen values by a public rule in sec.1-7 or sec.9 of `references/derivation-rules.md` | `# derived: <rule>, sec.N` e.g. `# derived: M3 tone T90, sec.1` |
+| defaulted | this skill's own recommended value (sec.8 of `derivation-rules.md`), or an "unverified" row used as a stated choice; it yields to any chosen value or a reason in Intent | `# defaulted: <row>, sec.8` plus `; for pick "<pick>", site N` when a pick triggered it |
+| open | no chosen input, no rule and no default can bridge the gap | in `colors` / `typography` / `spacing` / `rounded`: OMIT the key and leave a comment line `# <key>: open (TODO: decide), see Known Gaps` (the linter rejects a placeholder value); in body prose: the literal `TODO: decide` |
+
+Every leaf value in `colors`, `typography`, `rounded`, `spacing`, `elevation`, `motion` and
+`breakpoints` carries its own trailing comment, including repeated ones (a `fontFamily`
+repeated in every role, `none: 0`). Trailing comments add no lines, and the validator
+(`scripts/check-design-md.sh`) checks each one.
 
 Rules:
 - Derivation is mandatory, not optional. If a chosen primary color exists, the full role set
   (containers, on-colors, surfaces, outlines, state overlays, dark scheme) is derived. A file
-  that leaves derivable tokens as `TODO` fails the richness bar.
+  that leaves derivable tokens as `TODO` fails the completeness bar.
+- `derived` never cites sec.8. A value computed from a defaulted input (the two reading
+  columns computed from the defaulted 1120 container) is `derived` and cites its own rule;
+  the input it starts from keeps its own tier.
 - Derivation never overrides a chosen value. A chosen hex stays as chosen even if the rule
   would compute a slightly different tone; the rule fills the roles around it. If the
   chosen hex fails WCAG contrast in a text role, keep it as a brand swatch and derive a
   passing tone for the text role, and say so in the Colors body.
 - Rows marked "unverified" in derivation-rules.md are inputs the skill chooses and names as
-  choices (`# chosen: skill default, ratio 1.25`), never cited as rules.
+  choices (`# defaulted: type ratio 1.25, unverified row`), never cited as rules.
 - Two sites chosen for the same attribute: the user's free text decides; absent that, ask one
   question before writing. Never average or blend.
 - Component tokens reference other tokens with `{colors.x}` syntax; a raw hex inside
@@ -75,7 +89,8 @@ Rules:
 
 ## Skeleton
 
-Fill every `<...>`. Delete no section. Where a section has no chosen input, it is still
+Fill every `<...>`. Delete no `##` section; a `###` subsection marked "only if" is deleted
+when the site does not have that thing. Where a section has no chosen input, it is still
 written from derived values and says in one sentence that it is derived, not chosen.
 
 ```md
@@ -84,101 +99,104 @@ version: alpha
 name: <site name or working title from Step 0>
 description: <one line: what the site is, for whom, primary goal>
 colors:
+  # Every leaf below carries its own tier comment. When primary was chosen, the derived
+  # comments shown are the usual ones; a value the user chose instead gets `chosen: ...`.
   # brand
-  primary: "<hex>"                    # chosen|derived|open
+  primary: "<hex>"                    # chosen: site N (<domain>)
   on-primary: "<hex>"                 # derived: M3 tone T100, sec.1
   primary-container: "<hex>"          # derived: M3 tone T90, sec.1
   on-primary-container: "<hex>"       # derived: M3 tone T30, sec.1
   primary-hover: "<hex>"              # derived: state layer 8% on-color, sec.1
   primary-active: "<hex>"             # derived: state layer 12%, sec.1
   primary-disabled: "<hex>"           # derived: on-surface 12%, sec.1
-  secondary: "<hex>"
-  on-secondary: "<hex>"
-  secondary-container: "<hex>"
-  on-secondary-container: "<hex>"
-  tertiary: "<hex>"
-  on-tertiary: "<hex>"
+  secondary: "<hex>"                  # derived: Tonal Spot secondary T40, sec.1
+  on-secondary: "<hex>"               # derived: M3 tone T100, sec.1
+  secondary-container: "<hex>"        # derived: M3 tone T90, sec.1
+  on-secondary-container: "<hex>"     # derived: M3 tone T30, sec.1
+  tertiary: "<hex>"                   # derived: Tonal Spot tertiary T40, sec.1
+  on-tertiary: "<hex>"                # derived: M3 tone T100, sec.1
   # surfaces
   surface: "<hex>"                    # derived: neutral T98, sec.1
-  surface-dim: "<hex>"
-  surface-bright: "<hex>"
-  surface-container-low: "<hex>"
-  surface-container: "<hex>"
-  surface-container-high: "<hex>"
+  surface-dim: "<hex>"                # derived: neutral T87, sec.1
+  surface-bright: "<hex>"             # derived: neutral T98, sec.1
+  surface-container-low: "<hex>"      # derived: neutral T96, sec.1
+  surface-container: "<hex>"          # derived: neutral T94, sec.1
+  surface-container-high: "<hex>"     # derived: neutral T92, sec.1
   on-surface: "<hex>"                 # derived: neutral T10, sec.1
-  on-surface-variant: "<hex>"
+  on-surface-variant: "<hex>"         # derived: neutral-variant T30, sec.1
   # borders
   outline: "<hex>"                    # derived: neutral-variant T50, sec.1
-  outline-variant: "<hex>"
+  outline-variant: "<hex>"            # derived: neutral-variant T80, sec.1
   # semantic
-  error: "<hex>"
-  on-error: "<hex>"
-  error-container: "<hex>"
-  success: "<hex>"                    # open or chosen; no M3 rule
-  warning: "<hex>"
+  error: "<hex>"                      # derived: M3 error T40, sec.1
+  on-error: "<hex>"                   # derived: M3 tone T100, sec.1
+  error-container: "<hex>"            # derived: M3 error-container T90, sec.1
+  # success: open (TODO: decide), see Known Gaps   (no M3 rule; a chosen value replaces this line)
+  # warning: open (TODO: decide), see Known Gaps
   # overlays
-  scrim: "<hex>"                      # chosen: skill default, neutral T0 at 50%, sec.8
+  scrim: "<hex>"                      # derived: M3 scrim neutral T0, sec.1; 50% opacity defaulted, sec.8
   focus-ring: "<hex>"                 # derived: >= 3:1 vs adjacent, sec.6
 typography:
+  # Every role is written in block form, one property per line, each with its own tier
+  # comment; a flow map (`body-lg: {fontSize: 16px, ...}`) is rejected by the validator
+  # because one comment cannot carry two tiers. Roles: display-lg, display-md, headline-lg,
+  # headline-md, title-lg, title-md, body-lg, body-md, label-lg, label-md, caption.
+  # No family chosen: omit fontFamily and write `# fontFamily: open (TODO: decide)` instead.
   display-lg:
-    fontFamily: <heading family>       # chosen|open
-    fontSize: <px>                     # derived: M3 display-medium 45px or scale ratio, sec.2
-    fontWeight: "<100-900>"
-    lineHeight: <unitless or px>
-    letterSpacing: <em>
-  display-md: {...}
-  headline-lg: {...}
-  headline-md: {...}
-  title-lg: {...}
-  title-md: {...}
-  body-lg: {...}                       # 16px / 1.5 unless chosen otherwise, sec.2
-  body-md: {...}
-  label-lg: {...}
-  label-md: {...}                      # 14px minimum (DADS: nothing readable below 14), sec.9
-  caption: {...}                       # 14px, footer and constrained UI only, sec.9
+    fontFamily: <heading family>       # chosen: site N (<domain>)
+    fontSize: <px>                     # derived: M3 display-medium 45px, sec.2
+    fontWeight: "<100-900>"            # derived: M3 regular 400, sec.2
+    lineHeight: <unitless>             # derived: M3 display 1.12, sec.2
+    letterSpacing: 0                   # derived: DADS display tracking 0, sec.9
+  body-lg:
+    fontFamily: <body family>          # chosen: site N (<domain>)
+    fontSize: 16px                     # derived: M3 body-large, sec.2
+    fontWeight: "400"                  # derived: M3 regular 400, sec.2
+    lineHeight: <unitless>             # derived: M3 body-large 1.5, sec.2 | Japanese: derived: DADS Std-16 175%, sec.9
+    letterSpacing: <em>                # derived: DADS step 0 / 0.01em / 0.02em, sec.9
+  # label-md and caption: 14px minimum (Hard Baseline; DADS, sec.9)
 rounded:
-  none: 0
-  sm: <px>                             # derived: M3 shape scale by feel, sec.4
-  md: <px>
-  lg: <px>
-  xl: <px>
-  full: 9999px
+  none: 0                              # derived: M3 shape none, sec.4
+  sm: <px>                             # derived: M3 shape row, sec.4; feel-to-row mapping defaulted, sec.8
+  md: <px>                             # derived: M3 shape row, sec.4
+  lg: <px>                             # derived: M3 shape row, sec.4
+  xl: <px>                             # derived: M3 shape row, sec.4
+  full: 9999px                         # derived: M3 shape full, sec.4
 spacing:
   base: 4px                            # derived: Tailwind --spacing, sec.3
-  xxs: 2px
-  xs: 4px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  xxl: 32px
-  xxxl: 48px
-  section: <px>                        # chosen feel -> 48|64|96, stated as skill default
-  gutter: <px>
-  container: 1120px                    # chosen: skill default, sec.8 (override only with a creative intent in Intent)
-  page-margin: clamp(24px, 6vw, 96px)  # chosen: skill default, sec.8; side margin outside the container
-  content-wide: 740px                  # derived: DADS 8-col offset column in the container, sec.9; reading, FAQ, forms
-  content-narrow: 548px                # derived: DADS 6-col offset column, sec.9; single-column forms, short statements
-  section-height: 960px                # chosen: skill default, sec.8; desktop band height = tallest band
+  xxs: 2px                             # derived: half step of the 4px base, sec.3
+  xs: 4px                              # derived: Tailwind step 1, sec.3
+  sm: 8px                              # derived: Tailwind step 2, sec.3
+  md: 12px                             # derived: Tailwind step 3, sec.3
+  lg: 16px                             # derived: Tailwind step 4, sec.3
+  xl: 24px                             # derived: Tailwind step 6, sec.3
+  xxl: 32px                            # derived: Tailwind step 8, sec.3
+  xxxl: 48px                           # derived: Tailwind step 12, sec.3
+  section: <px>                        # defaulted: section padding by feel, sec.8; for feel "<answer>"
+  gutter: 24px                         # defaulted: grid gutter, sec.8
+  container: <px>                      # chosen: site N (a picked site's width) | defaulted: 1120px, sec.8
+  page-margin: clamp(24px, 6vw, 96px)  # defaulted: container and side margins, sec.8
+  content-wide: <px>                   # derived: DADS 8-col offset column in the container, sec.9 (740px at 1120); reading, FAQ, forms
+  content-narrow: <px>                 # derived: DADS 6-col offset column, sec.9 (548px at 1120); single-column forms, short statements
 elevation:
-  level0: none
-  level1: "<css shadow>"               # derived: Tailwind shadow-sm, sec.4
-  level2: "<css shadow>"
-  level3: "<css shadow>"
-  level4: "<css shadow>"
-  level5: "<css shadow>"
+  level0: none                         # derived: M3 level0, sec.4
+  level1: "<css shadow>"               # derived: Tailwind shadow-xs, sec.4
+  level2: "<css shadow>"               # derived: Tailwind shadow-sm, sec.4
+  level3: "<css shadow>"               # derived: Tailwind shadow-md, sec.4
+  level4: "<css shadow>"               # derived: Tailwind shadow-lg, sec.4
+  level5: "<css shadow>"               # derived: Tailwind shadow-xl, sec.4
 motion:
-  duration-short: <ms>                 # derived: M3 short4 200ms, sec.5
-  duration-medium: <ms>
-  duration-long: <ms>
-  easing-standard: cubic-bezier(0.2, 0, 0, 1)
-  easing-enter: cubic-bezier(0, 0, 0, 1)
-  easing-exit: cubic-bezier(0.3, 0, 1, 1)
+  duration-short: 200ms                # derived: M3 short4, sec.5
+  duration-medium: 300ms               # derived: M3 medium2, sec.5
+  duration-long: 500ms                 # derived: M3 long2, sec.5
+  easing-standard: cubic-bezier(0.2, 0, 0, 1)   # derived: M3 standard, sec.5
+  easing-enter: cubic-bezier(0, 0, 0, 1)        # derived: M3 standard-decelerate, sec.5
+  easing-exit: cubic-bezier(0.3, 0, 1, 1)       # derived: M3 standard-accelerate, sec.5
 breakpoints:
-  sm: 640px                            # derived: Tailwind, sec.3 (or chosen from site)
-  md: 768px
-  lg: 1024px
-  xl: 1280px
+  sm: 640px                            # derived: Tailwind sm, sec.3 (or chosen: site N)
+  md: 768px                            # derived: Tailwind md, sec.3
+  lg: 1024px                           # derived: Tailwind lg, sec.3
+  xl: 1280px                           # derived: Tailwind xl, sec.3
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
@@ -209,93 +227,86 @@ components:
 ---
 
 ## Agent Guide
-<8-12 lines addressed to the AI that will build the site. Reading order: Baseline first,
-then Intent, then tokens, then Components. Priority when rules conflict: Baseline > Do's
-and Don'ts > Intent > tokens > body prose. How to treat `TODO: decide` (ask the owner, never guess). Which token groups are
-chosen vs derived, so the AI knows what is sacred and what is adjustable. One line on the
-one quality to protect above all others.>
+<8-12 lines addressed to the AI that will build the site. Reading order: Hard Baseline
+first, then Intent, then tokens, then Components, then Layout Heuristics. Priority when
+rules conflict: Hard Baseline > Intent and Do's and Don'ts > chosen tokens > derived tokens
+> Layout Heuristics and defaulted tokens > body prose. How to treat `TODO: decide` (ask the
+owner, never guess). Which token groups are chosen, derived, or defaulted, so the AI knows
+what is sacred (chosen), what follows from it (derived), and what is only a recommendation
+(defaulted). One line on the one thing to make memorable (Step 0).>
 
-## Baseline
-Rules that hold for this site whatever the style says. They come from the Digital Agency
-Design System (DADS, https://design.digital.go.jp/dads/) and WCAG 2.2; a style rule that
-conflicts with a baseline rule loses. Priority: Baseline > Do's and Don'ts > Intent >
-tokens > prose.
-### Layout
-- Fluid layout at every width; a needed horizontal scrollbar is never hidden. (DADS layout)
-- Content lives on a 12-column grid inside `{spacing.container}`, centered, with
-  `{spacing.gutter}` side margins kept at every width including the narrowest. (DADS layout)
-- Reading blocks (statements, long copy, FAQ, forms, articles) never span the full
-  container: they sit in a centered column of `{spacing.content-wide}` (DADS 8-col offset)
-  or `{spacing.content-narrow}` (DADS 6-col offset). Their rules, dividers, and fields end
-  at that column's edge, never at the page edge or at a left-aligned text measure.
-- Grids reduce column counts at breakpoints; visual order equals reading order. (DADS)
-- Generous side margins by default: the container is `{spacing.container}` with
-  `{spacing.page-margin}` kept on each side, so cards and headings never sit near the
-  screen edge. (skill default, sec.8)
-- Uniform section height by default: on desktop (1024px and wider) every
-  band below the hero shares one height, `{spacing.section-height}`, set to the tallest
-  band's natural height rounded up to the 8px grid (skill default 960px, the height of a
-  standard inquiry form). Each band keeps `{spacing.section}` padding and holds its heading
-  and content together as one group in the vertical middle. Phones keep natural height.
-  Because short content in a tall band can read as floating, the band must still have a
-  visible floor (the alternating background below) and its heading and content must sit
-  on one axis; if a band's content is under half the height, enlarge the content (bigger
-  cards, an image, more items) rather than shrink the band. (skill default, sec.8)
-- Every band has a visible floor: adjacent bands alternate background (`surface` /
-  `surface-container-low`), and two bands of the same color never touch. If the page order
-  makes that impossible, merge the shorter band into its neighbor. (skill default, sec.8)
-- Two alignment axes, one per section: grid sections (cards, rails, multi-column) align to
-  the container's left edge; reading sections (statements, long copy, FAQ, forms) put their
-  heading AND their content in the centered `{spacing.content-wide}` column. A section never
-  mixes the two, and every section uses one of them. (skill default, sec.8)
-- A lone sentence (a statement, a call to action line) is not a section of its own: it opens
-  or closes a neighboring section. (skill default, sec.8)
-- These defaults change only when Intent records a deliberate creative reason (for
-  example a full-bleed editorial layout); the reason is written there, not implied.
-- Display-size lines (display-md and up, short statements) are not reading blocks: they
-  use the full container, never the content column, so a one-line statement stays on one
-  line. (skill default, sec.8)
-- Japanese headings wrap at phrase boundaries with balanced lines (`word-break:
-  auto-phrase; text-wrap: balance`); no heading may end with a one- or two-character
-  orphan such as a lone final kana and period at any width. Where a narrow card cannot
-  avoid it, the heading steps down one type role on phones. (skill default, sec.8)
-### Spacing
-- One modular scale of 3 to 5 working steps; the same kind of element always gets the same
-  gap; the more important the element, the larger its surrounding gap. (DADS spacing)
-### Typography
+## Hard Baseline
+Floors that hold for this site whatever the style says: accessibility and safety, from
+WCAG 2.2 and the hard rows of the Digital Agency Design System (DADS,
+https://design.digital.go.jp/dads/), plus one legibility rule for Japanese headings that
+the skill owner promoted here. A style rule that breaks one of these loses.
+### Layout Safety
+- Fluid layout at every width; a needed horizontal scrollbar is never hidden; the page keeps
+  a side margin at the narrowest width; reflow at 320 CSS px and 200% zoom lose nothing.
+  (DADS layout; WCAG 1.4.4, 1.4.10)
+- Visual order equals reading order at every breakpoint. (DADS layout)
+### Readable Text
 - Body and UI text 16px or larger; 14px only in the footer or constrained UI; nothing
-  readable below 14px. Line-height at least 1.5 for body (this file: `{typography.body-lg}`).
-  Letter-spacing only 0, 0.01em, or 0.02em. No italic for Japanese. One h1 per page;
-  heading level and size are independent. (DADS typography, heading)
-### Color and contrast
+  readable below 14px. Body line-height at least 1.5 (this file: `{typography.body-lg}`),
+  and the layout survives the WCAG 1.4.12 text-spacing overrides. One h1 per page; heading
+  level and size are independent. (DADS typography, heading; WCAG 1.4.12)
+- Japanese headings wrap at phrase boundaries with balanced lines (`word-break:
+  auto-phrase; text-wrap: balance`); no heading ends in a one- or two-character orphan such
+  as a lone final kana and period at any width. Where a narrow card cannot avoid it, the
+  heading steps down one type role on phones. (owner-promoted legibility rule, sec.8)
+### Color and Contrast
 - Text 4.5:1 against its background, always; non-text UI and borders 3:1; a drop shadow
   never counts as contrast. Meaning is never carried by color alone: links are underlined
-  or otherwise marked, button importance is shown by shape, states by text or icon. (DADS
-  color, link-text, elevation)
-### Interaction
-- Every interactive element shows a visible focus indicator at 3:1 or better; targets are
-  44 x 44 CSS px minimum with no overlap. Hover raises elevation at least one level;
-  dialogs sit at least two levels up. Decorative motion stops under
-  `prefers-reduced-motion`. (DADS button accessibility, elevation; WCAG 2.4.7, 2.5.8)
-### Buttons
-- Heights from 56 / 48 / 36 / 28. One primary per screen; secondary at most three per
-  context; confirm on the right, cancel on the left on desktop. Disabled buttons are
-  avoided; show what is needed instead. (DADS button)
-### Forms
-- Visible label above every field; support text gives the format or an example; required
-  and optional are marked with words (`※必須` / `※任意`); a placeholder is never the label.
-  Field width matches the expected input (an email field is not a page-wide bar); the
-  whole form sits in the reading column. Errors are static text that begins with `＊`
-  and states the cause and the fix, tied with `aria-describedby`, never via `aria-live`.
-  No `maxlength`, no copy or paste bans, no split email fields, no disabled or readonly
-  fields. Radio for single choice up to five options; checkbox left of its label. (DADS
-  input-text, radio, checkbox, select)
-### Disclosure
-- FAQ and similar use an accordion of two or more items built on `<details>` and
-  `<summary>`, header = the question, nothing important hidden inside, no nesting. (DADS
-  accordion, disclosure)
-### Target
+  or otherwise marked, states are shown by text or icon as well. (DADS color, link-text,
+  elevation; WCAG 1.4.3, 1.4.11)
+### Interaction Safety
+- Every interactive element shows a visible focus indicator at 3:1 or better
+  (`:focus-visible`, never `outline: none` without a replacement); targets are 44 x 44 CSS
+  px minimum with no overlap. Decorative motion stops under `prefers-reduced-motion`.
+  (DADS button accessibility; WCAG 2.4.7, 2.5.8)
+### Form Safety
+- Visible label above every field; a placeholder is never the label; required and optional
+  are marked in words. Errors are static text that states the cause and the fix, tied with
+  `aria-describedby`. No `maxlength`, no copy or paste bans, no split email fields, no
+  disabled or readonly fields. (DADS input-text)
+- FAQ and similar disclosures are built on `<details>` and `<summary>`, header = the
+  question, nothing important hidden inside, no nesting. (DADS accordion, disclosure)
+### Conformance Target
 - JIS X 8341-3:2016 / WCAG 2.2 level AA. (DADS webaccessibility)
+
+## Layout Heuristics
+Recommendations that apply only where the user's picks and Intent are silent. Each one
+yields to a chosen value (a picked site's width, alignment, or section proportions) or to a
+reason written in Intent; when one yields, Intent says which and why. Sources: the layout
+rows of DADS and this skill's defaults (derivation-rules sec.8).
+### Grid and Container
+- Content sits on a 12-column grid inside `{spacing.container}`, centered, with
+  `{spacing.page-margin}` kept on each side, so cards and headings never sit near the
+  screen edge; grids reduce column counts at breakpoints. (DADS layout; sec.8)
+- Reading blocks (statements, long copy, FAQ, forms, articles) sit in a centered column of
+  `{spacing.content-wide}` or `{spacing.content-narrow}`; their rules, dividers, and fields
+  end at that column's edge. Display-size lines are not reading blocks: they use the full
+  container so a one-line statement stays on one line. (DADS layout; sec.8)
+### Section Rhythm
+- The size of each section sets the reader's rhythm: equal sizes read as a steady march, a
+  deliberate change in size reads as a pause or an emphasis. Page Structure states the
+  rhythm this site uses and why; section sizes are decided, never left to whatever content
+  each band happens to hold. (sec.8)
+- One alignment axis per section: grid sections align to the container's left edge,
+  reading sections put heading and content in the reading column; a section never mixes
+  the two. A lone sentence (a statement, a call to action line) opens or closes a
+  neighboring section instead of forming its own. (sec.8)
+### Spacing and Type Conventions
+- One modular spacing scale of 3 to 5 working steps; the same kind of element always gets
+  the same gap; more important elements get larger gaps. Letter-spacing 0, 0.01em, or
+  0.02em for running text; no italic for Japanese. (DADS spacing, typography)
+### Control Conventions
+- Button heights from 56 / 48 / 36 / 28; one primary per screen; confirm on the right,
+  cancel on the left on desktop; disabled buttons avoided. Field width matches the expected
+  input; required marks written `※必須` / `※任意`; error text begins with `＊`; radio for
+  single choice up to five options; checkbox left of its label. Hover raises elevation one
+  level; dialogs sit at least two levels up. (DADS button, input-text, radio, checkbox,
+  elevation)
 
 ## Overview
 <5-8 sentences. What the site is for, who visits, the mood in everyday words, how the page
@@ -341,14 +352,16 @@ the metric differences to expect>
 
 ## Layout
 ### Spacing System
-<base unit; the scale; what each step is for (card padding, gutters, section bands); the
-section rhythm (alternating backgrounds, dividers, or whitespace only)>
+<base unit; the scale; what each step is for (card padding, gutters, section bands); how
+sections are separated (whitespace, dividers, or a background change), as observed on the
+picked sites or stated as a default>
 ### Grid & Container
 <container width; column counts per breakpoint; gutter; any asymmetric layout (sidebar,
 sticky rail)>
 ### Page Structure
 <numbered list, top to bottom, one line per section: name, layout (columns, alignment),
-background surface, the component it uses, the chosen source if any>
+relative size (its share of the rhythm), background surface, the component it uses, the
+chosen source if any. Close with one sentence naming the rhythm and why it serves the goal>
 ### Whitespace Philosophy
 <2-4 sentences: where the page breathes and where it is dense, and why that contrast
 serves the goal from Step 0>
@@ -366,10 +379,10 @@ uniform or deliberately mixed; `{rounded.*}` references>
 <primary / secondary / tertiary: size, padding, radius, label style, every state in one
 line each, where each variant is used>
 ### Inputs & Forms
-<text input at rest / focus / error / disabled; label placement; helper text; validation
+<only if Page Structure has a form; otherwise delete this subsection. text input at rest / focus / error / disabled; label placement; helper text; validation
 tone>
 ### Cards
-<padding, radius, border or shadow, image ratio, hover behavior, text hierarchy inside>
+<only if Page Structure has cards; otherwise delete this subsection. padding, radius, border or shadow, image ratio, hover behavior, text hierarchy inside>
 ### Navigation
 <height, sticky or not, logo placement, link style, active state, mobile collapse pattern>
 ### Footer
@@ -400,7 +413,7 @@ transitions medium, page or hero long); easings; the one orchestrated moment, if
 behavior; the narrow-width nav rule (what leaves the bar below N px); mobile sizes for
 display-lg and display-md (clamp() ranges) and mobile padding for bands and cards>
 ### Touch Targets
-<minimum 44px for primary actions (sec.6), 24px absolute floor, spacing between targets>
+<44 x 44 CSS px minimum for every target, no overlap (Hard Baseline); spacing between adjacent targets; how small inline links meet it>
 
 ## Imagery & Iconography
 <photo style (people vs product, color treatment, crop ratios), illustration policy, icon
@@ -429,7 +442,7 @@ policy; heading order>
 ## Intent
 <English, 8-15 lines. Industry, goal, audience from Step 0. For each bundle: what the user
 chose to take and from which source number, what they explicitly rejected, what stays
-open. Which token groups are chosen vs derived. This section is why the file exists; write
+open. Which token groups are chosen, derived, or defaulted, and which heuristics a pick overrode. This section is why the file exists; write
 it so an AI with no other context could rebuild the choices.>
 
 ## Sources
@@ -457,23 +470,26 @@ with the question the owner must answer>
 
 ## Filling order
 
-0. The Baseline section is copied from the skeleton verbatim (it is not style-dependent);
-   only the token references inside it are resolved. Then check every later section
-   against it: a style choice that breaks a baseline rule is rewritten, not kept.
-   Derived values are snapped to the Baseline, not left at their source rule's value:
-   letter-spacing to 0 / 0.01em / 0.02em (M3 tracking values are snapped, display roles
-   get 0; only an `aria-hidden` wordmark may go negative); readable sizes to 14px or
-   more; FAQ written as `<details>` / `<summary>`; required marks written `※必須` /
-   `※任意`; error text starting with `＊`. Builders follow a style section over the
-   Baseline when the two disagree, so the snapping happens here.
+0. The Hard Baseline section is copied from the skeleton verbatim (it is not
+   style-dependent); only the token references inside it are resolved. Then check every
+   later section against it: a style choice that breaks a Hard Baseline rule is rewritten,
+   not kept. Derived and defaulted values are snapped to it here (readable sizes to 14px or
+   more, body line-height to 1.5 or more, FAQ written as `<details>` / `<summary>`), because
+   builders follow a style section over a baseline when the two disagree.
+   The Layout Heuristics section is copied too, then edited: every heuristic that a pick or
+   Intent overrides is rewritten to the chosen behavior (and Intent says so), not left
+   standing next to its contradiction. Derived values follow the heuristics only where no
+   chosen value disagrees (M3 tracking snapped to 0 / 0.01em / 0.02em unless the user chose
+   a tracked display face).
 1. Chosen tokens first, from the interview picks and `facts.txt`.
 2. Derived tokens, group by group, following the recipe at the end of
    `references/derivation-rules.md` (palettes, roles, contrast check, states, type scale,
    spacing, radii, elevation, breakpoints, motion).
 3. Layout and Page Structure from the WebFetch section list plus picks.
-4. Components: the 6 base ones, then every picked one, each with states.
+4. Components: the ones Page Structure uses, then every picked one, each with states.
 5. Interaction States matrix, Motion, Responsive, Imagery, Voice, Accessibility.
-6. Do's and Don'ts from picks, rejections, and sec.7 bans that fit the mood.
+6. Do's and Don'ts from picks and rejections first, then the sec.7 bans that fit, each
+   tagged `(skill heuristic)`. The Step 0 "memorable thing" is the one place boldness is spent.
 7. Agent Guide and Overview last, so they summarize rather than promise.
 8. Intent, Sources, Iteration Guide, Known Gaps, Brief.
 
@@ -481,7 +497,8 @@ with the question the owner must answer>
 
 Each pair below is a contradiction that can live between two sections that are
 individually fine. Check every pair below before writing; a builder follows the
-priority order (Baseline > Do's and Don'ts > Intent > tokens > prose) and will silently pick one side.
+priority order (Hard Baseline > Intent and Do's and Don'ts > chosen > derived > Layout
+Heuristics and defaulted > prose) and will silently pick one side.
 
 - Nav width budget: at 320px, logo + primary CTA (label at label-lg plus 2 x 24px padding)
   + menu button + gaps must fit inside 320 - 2 x gutter. If not, write the narrow-width rule
@@ -492,8 +509,8 @@ priority order (Baseline > Do's and Don'ts > Intent > tokens > prose) and will s
   the Elevation section says is in use, and vice versa.
 - Page Structure heading sizes vs Hierarchy table: a section title size named in Page
   Structure matches the Hierarchy row for section titles, or the exception is stated.
-- Band rhythm vs band assignments: if bands "alternate", the Page Structure list actually
-  alternates; otherwise describe the real rhythm (two low bands in a row is allowed, say so).
+- Rhythm vs band sizes: the rhythm sentence closing Page Structure matches the relative
+  sizes listed for each section; a band said to "pause" is visibly different in size.
 - Box arithmetic: for every component with a fixed height, height >= 2 x vertical padding
   + line-height x font-size. Inputs with body-lg at 1.75 need 52px or 8px padding.
 - Focus treatment per class: buttons and links get the ring + offset; inputs get the
@@ -508,22 +525,26 @@ priority order (Baseline > Do's and Don'ts > Intent > tokens > prose) and will s
   padding has a mobile value.
 - Whole-card links: a card that "is the link" contains no second interactive element, or
   the inner button is the only link and the card is its hit area.
-- Rails: enough items that the last one is cut at the widest breakpoint (four or more
-  for a 1280 container with 360px cards), and a stated destination for each item or an
-  explicit "cards are not links".
+- Rails: enough items that the last one is cut at the widest breakpoint (compute it from the
+  container and the card width actually written), and a stated destination for each item
+  or an explicit "cards are not links".
 - Single-page sites: say how the active nav state is driven (scroll position) or drop it.
 
 ## Self-check before writing the file
 
-- Line count between 350 and 700. Under 350: a section was one-lined; fix it.
-- Baseline present verbatim and no later section contradicts it (reading blocks centered in
-  content-wide or content-narrow; no text under 14px; placeholders never labels).
-- Every token has a tier comment (chosen / derived). Open tokens are absent from the
-  token map, named in a comment line, and each one appears in Known Gaps with its
-  question.
-- No hex value inside `components`; references only.
+Mechanical checks first: run `scripts/check-design-md.sh <draft> <workdir>/picks.txt` (SKILL.md
+Step 5). It fails on a token without a tier comment, a `chosen` token whose site and bundle
+are not in picks.txt, a `derived` token citing sec.8, a hex inside `components`, and a
+missing or duplicated required heading. Fix every FAIL line, rerun until it exits 0.
+
+Then the judgment checks the script cannot make:
+- Completeness bar met; no section one-lined; no component the site will not have.
+- Hard Baseline present verbatim; no later section contradicts it (no text under 14px,
+  placeholders never labels, contrast floors met).
+- Layout Heuristics edited where a pick overrides one, with the reason in Intent.
+- No value is `chosen` unless the user picked that attribute AND the value came from the
+  site or the user; a pick realized with a skill number is `defaulted`.
 - Contrast table present, every text pair >= 4.5:1 or explicitly noted as large text 3:1.
 - No reference site named outside `Sources` and `Intent`.
 - No copied sentence, image URL, or logo from any site.
-- Heading set matches the skeleton exactly once each.
 - The Brief section is byte-identical to the text the user said OK to.

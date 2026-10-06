@@ -1,0 +1,6 @@
+# fixture: one site, colors and type picked, one typed font
+site 1 https://example.com
+pick 1 color-type
+note 1 almost only white and black with one accent
+reject 1 the autoplay hero video
+user typography

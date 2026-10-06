@@ -10,22 +10,23 @@
 
 ## できあがるもの
 
-[Google design.md 形式](https://github.com/google-labs-code/design.md)の `DESIGN.md` が 1 ファイル、350〜700 行でできあがります。
+[Google design.md 形式](https://github.com/google-labs-code/design.md)の `DESIGN.md` が 1 ファイルできあがります。長さは行数ではなく、必要な項目がそろっているかで決まります(多くは 200〜700 行です)。あなたのサイトにない部品は書きません。
 
 - 前半は YAML front matter(ファイル冒頭の設定欄)です。デザイントークン(色や文字サイズなど、デザインの値に名前を付けたもの)を `colors`、`typography`、`rounded`、`spacing`、`elevation`、`motion`、`breakpoints`、`components` に分けて並べます。
-- 後半は文章のセクションです。AI 向けの使い方ガイドと、どんな見た目でも守る基本ルール(ベースライン)から始まり、アクセシビリティ(誰にとっても使いやすくする配慮)、やること・やらないこと、デザインの意図、出典、最後に日本語の要約文までを収めます。
+- 後半は文章のセクションです。AI 向けの使い方ガイドと、どんな見た目でも守るアクセシビリティの最低ライン(ハードベースライン)、あなたの選択がないところだけに使うレイアウトの推奨(レイアウトヒューリスティクス)から始まり、アクセシビリティ(誰にとっても使いやすくする配慮)、やること・やらないこと、デザインの意図、出典、最後に日本語の要約文までを収めます。
 
 では、選んだのが青い色一つとフォント一つだけだった場合、残りの値はどこから来るのでしょうか。AI が「それらしい値」を作り話で埋めるのではないか、という心配はもっともです。
 
-このスキルでは、すべての値に次の 3 つのラベルのどれかが付き、ファイルの中に書き込まれます。
+このスキルでは、すべての値に次の 4 つのラベルのどれかが付き、ファイルの中に書き込まれます。
 
 | ラベル | 意味 |
 |---|---|
 | `chosen` | 参考サイトの上であなたが選んだ値、またはあなたが入力した値 |
 | `derived` | `chosen` の値から、公開されたルールで計算した値。ルールは Material Design 3(Google のデザイン体系)、WCAG 2.2(Web アクセシビリティの国際基準)、Tailwind CSS の数値の刻み、デジタル庁デザインシステムなど |
+| `defaulted` | このスキルが用意した推奨値(ページ幅 1120px など)。あなたの選択があれば、必ずそちらが優先されます(例外は日本語見出しの改行ルールだけで、これは読みやすさの最低ラインとして常に守ります) |
 | `open` | まだ決まっていない値。`TODO: decide` と書かれます |
 
-どのラベルにも当てはまらない値は、ファイルに入りません。一つひとつの値が「誰が選んだか」「どのルールで出したか」までたどれること、それがこのスキルのいちばんの特長です。
+どのラベルにも当てはまらない値は、ファイルに入りません。スキル側の好みに `chosen` のラベルを付けることもしません。一つひとつの値が「誰が選んだか」「どのルールで出したか」「スキルの推奨か」までたどれること、それがこのスキルのいちばんの特長です。書き出す前に、同梱の `scripts/check-design-md.sh` がこのラベルとインタビューの記録を突き合わせます。
 
 ## 必要なもの
 
@@ -126,7 +127,8 @@ Claude Code で、引数なしで呼び出します。
 │       │   ├── output-template.md
 │       │   └── derivation-rules.md
 │       └── scripts/
-│           └── fetch-site.sh
+│           ├── fetch-site.sh
+│           └── check-design-md.sh
 ├── tests/
 ├── LICENSE
 └── README.md
@@ -140,7 +142,7 @@ MIT ライセンスです(`LICENSE` を参照)。値の計算には Material Des
 
 ## English
 
-`design-md` is a Claude Code skill. You bring 1 to 3 websites you like; it does not copy them. It asks what exactly you want to borrow from each one (layout, a specific section, colors and type, mood and whitespace), using options observed on that site, then writes a `DESIGN.md` of 350 to 700 lines in the [Google design.md format](https://github.com/google-labs-code/design.md). Every token is labeled `chosen` (picked or typed by you), `derived` (computed from chosen values by a cited public rule), or `open` (`TODO: decide`). The interview and the roughly 800-character brief you approve before the file is written are conducted in Japanese.
+`design-md` is a Claude Code skill. You bring 1 to 3 websites you like; it does not copy them. It asks what exactly you want to borrow from each one (layout, a specific section, colors and type, mood and whitespace), using options observed on that site, then writes a complete `DESIGN.md` in the [Google design.md format](https://github.com/google-labs-code/design.md), judged by required content rather than line count, with no components your site will not have. Every token is labeled `chosen` (picked or typed by you), `derived` (computed from chosen values by a cited public rule), `defaulted` (the skill's own recommendation, which always yields to your choices; the one exception is a Japanese heading-wrap rule kept as a legibility floor), or `open` (`TODO: decide`). Before the file is written, `scripts/check-design-md.sh` checks those labels against the interview record. The interview and the roughly 800-character brief you approve before the file is written are conducted in Japanese.
 
 Requirements: Claude Code, `bash`, `curl` (`npx` optional, for a best-effort lint).
 

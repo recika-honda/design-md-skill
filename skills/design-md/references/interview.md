@@ -14,10 +14,10 @@ question, the tool adds an Other free-text option by itself. Never write an "Oth
 
 ```
 こんにちは。参考にしたいサイトから、あなたのサイト専用の DESIGN.md を作ります。
-先に、作りたいサイトのことを 3 つだけ伺います。
+先に、作りたいサイトのことを 4 つだけ伺います。
 ```
 
-## Step 0: the user's own site (one call, three questions)
+## Step 0: the user's own site (one call, four questions)
 
 Question 1 (header `業種`, single-select):
 
@@ -48,6 +48,20 @@ Question 3 (header `相手`, single-select):
 - すでに知っている既存のお客さま・会員
 - 求職者・応募者・学生
 ```
+
+Question 4 (header `印象`, single-select):
+
+```
+初めて訪れた人に、ひとつだけ覚えて帰ってほしいものは何ですか？
+- 大きな写真や映像（ひと目で伝わる絵）
+- 言葉（キャッチコピーや理念）
+- 数字や実績（導入社数・事例など）
+- 色や形の世界観（ブランドらしさ）
+```
+
+This is where the site spends its boldness. Everything else in the brief and the file stays
+quieter than this one thing. A free-text answer ("代表の顔", "商品そのもの") is better than
+any option; keep its wording.
 
 ## Step 1: reference URLs
 

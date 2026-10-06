@@ -1,0 +1,13 @@
+{
+  "name": "design-md",
+  "version": "1.0.0",
+  "description": "Builds a DESIGN.md for your site by interviewing you about 1-3 reference sites you like.",
+  "author": {
+    "name": "recika-honda",
+    "url": "https://github.com/recika-honda"
+  },
+  "homepage": "https://github.com/recika-honda/design-md-skill",
+  "repository": "https://github.com/recika-honda/design-md-skill",
+  "license": "MIT",
+  "keywords": ["design-md", "design-system", "design-tokens", "web-design", "skill"]
+}

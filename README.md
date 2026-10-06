@@ -15,7 +15,7 @@
 - 前半は YAML front matter(ファイル冒頭の設定欄)です。デザイントークン(色や文字サイズなど、デザインの値に名前を付けたもの)を `colors`、`typography`、`rounded`、`spacing`、`elevation`、`motion`、`breakpoints`、`components` に分けて並べます。
 - 後半は文章のセクションです。AI 向けの使い方ガイドと、どんな見た目でも守る基本ルール(ベースライン)から始まり、アクセシビリティ(誰にとっても使いやすくする配慮)、やること・やらないこと、デザインの意図、出典、最後に日本語の要約文までを収めます。
 
-では、選んだのが青い色を一つとフォントを一つだけだった場合、残りの値はどこから来るのでしょうか。AI が「それらしい値」を作り話で埋めるのではないか、という心配はもっともです。
+では、選んだのが青い色一つとフォント一つだけだった場合、残りの値はどこから来るのでしょうか。AI が「それらしい値」を作り話で埋めるのではないか、という心配はもっともです。
 
 このスキルでは、すべての値に次の 3 つのラベルのどれかが付き、ファイルの中に書き込まれます。
 
@@ -95,11 +95,11 @@ Claude Code で、引数なしで呼び出します。
 参考 URL ごとに、同梱の `scripts/fetch-site.sh` が `curl` で通信します。何をするかは次のとおりです。
 
 - 取得するのは、指定されたページ 1 枚と、そのページのスタイルシート(見た目を決める CSS ファイル)最大 8 個です。
-- デスクトップ版 Chrome の User-Agent(どのブラウザからのアクセスかを名乗る情報)を名乗って取得します。訪問者が見るのと同じページを受け取るためです。
+- デスクトップ版 Chrome の User-Agent(どのブラウザからのアクセスかを示す情報)を名乗って取得します。訪問者が見るのと同じページを受け取るためです。
 - http と https 以外は扱いません。取得するサイズと時間には上限があります。
 - 401、403、429、503 の応答が返ったら、再試行せずにそこで止まります。
-- ループバックやプライベートネットワークのアドレス(自分の PC や社内ネットワークを指すアドレス)に置かれたスタイルシートは取得しません。
-- 既知の制限として、ホスト名がプライベートアドレスに解決される場合は検出できません。
+- ループバックやプライベートネットワークのアドレス(自分の PC や社内ネットワークを指すアドレス)に置かれたスタイルシートは取得しません。ただし、読み取るページ自身がそのアドレスにある場合(手元で動かしている開発中のサイトなど)は、同じ場所のスタイルシートを読みます。
+- 既知の制限として、公開されたホスト名がプライベートアドレスに解決される場合と、公開された URL からプライベートアドレスへ転送(リダイレクト)される場合は検出できません。
 - 取得したファイルは一時フォルダに置かれ、作業の最後に削除されます。
 
 スクリプトとは別に、Claude Code の WebFetch も同じ URL を読み、区画の並びを把握します。読み取ってよい権限のあるサイトだけを指定してください。
@@ -136,7 +136,7 @@ Claude Code で、引数なしで呼び出します。
 
 ## ライセンスとクレジット
 
-MIT ライセンスです(`LICENSE` を参照)。値の計算には Material Design 3、WCAG 2.2、Tailwind CSS、Radix Colors、デジタル庁デザインシステム、Anthropic frontend-design、Vercel Web Interface Guidelines、Google design.md 仕様のルールを使っており、それぞれの出典 URL を `references/derivation-rules.md` に記載しています。
+MIT ライセンスです(`LICENSE` を参照)。値の計算には Material Design 3、WCAG 2.2、Tailwind CSS、Radix Colors、デジタル庁デザインシステム、Anthropic frontend-design、Vercel Web Interface Guidelines、Google design.md 仕様のルールを使っています。計算ルールの出典 URL は `references/derivation-rules.md` に、design.md 仕様の URL は `references/output-template.md` に記載しています。
 
 ## English
 
@@ -160,6 +160,6 @@ cp -r design-md-skill/skills/design-md ~/.claude/skills/design-md
 
 Usage: `/design-md` or `/design-md https://example.com https://example.org`. Put the resulting `DESIGN.md` at your project root and tell your AI coding tool to read it before any UI work.
 
-Network: for each reference URL, `scripts/fetch-site.sh` fetches that one page and up to 8 of its stylesheets with `curl`, using a desktop Chrome User-Agent. It speaks only http/https, has size and time limits, stops on 401/403/429/503 without retrying, and skips stylesheets on loopback or private-network addresses (a hostname that resolves to a private address is not detected). Files go to a temp folder deleted at the end. WebFetch also reads each URL. Only point it at sites you are allowed to read.
+Network: for each reference URL, `scripts/fetch-site.sh` fetches that one page and up to 8 of its stylesheets with `curl`, using a desktop Chrome User-Agent. It speaks only http/https, has size and time limits, stops on 401/403/429/503 without retrying, and skips stylesheets on loopback or private-network addresses unless the page itself is on that same host (not detected: a public hostname that resolves to a private address, or a public URL that redirects to one). Files go to a temp folder deleted at the end. WebFetch also reads each URL. Only point it at sites you are allowed to read.
 
 License: MIT.

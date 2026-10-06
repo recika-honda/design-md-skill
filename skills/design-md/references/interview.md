@@ -114,7 +114,7 @@ No URL after one prompt:
 取得ツール (curl) が見つからないため、ページの読み取りは簡易モードで行います。色やフォントの正確な値は取れないことがあります。
 ```
 
-## Step 3: per site, two calls
+## Step 3: per site, two or three calls
 
 Announce the site first, in one line, using its title from `facts.txt`:
 
@@ -177,22 +177,41 @@ Bundle: mood, motion, imagery (header `雰囲気`)
 - <tone observed, e.g. 言葉が短く、断定的>
 ```
 
-Final question when the call has room (header `避けたい`, single-select):
+### The avoid question (mandatory for every site, multi-select, header `避けたい`)
+
+Where it goes: if the user picked 3 bundles or fewer in Call A, it is the last question of
+Call B. If they picked all four, Call B is full (4 questions), so ask it alone in Call C.
+Options are 3 things observed on THIS site that people commonly dislike, plus `特にない`:
 
 ```
-逆に、このサイトで真似したくない点はありますか？
+逆に、このサイトで真似したくない点はありますか？ (複数選べます)
 - 特にない
-- 色づかい
-- 情報量・ごちゃごちゃ感
-- 動き・アニメーション
+- <disliked thing observed, e.g. 開いてすぐ自動再生される動画>
+- <disliked thing observed, e.g. 数秒後に出てくるメールマガジン登録のポップアップ>
+- <disliked thing observed, e.g. 取引先ロゴがずらりと並ぶ帯>
 ```
+
+Every answer other than `特にない` (free text included) becomes a `reject` line in picks.txt
+and appears in the brief's "do not" part, in DESIGN.md `Do's and Don'ts`, and in `Sources`
+(rejected: ...).
 
 Rules for building options:
 - Each option is one thing, nameable, visible on the page. Not "good hierarchy".
 - Include the concrete value in parentheses when it is a color or font, so the user learns
   the vocabulary while choosing.
 - If Step 2 produced fewer than 3 observations for a bundle, ask the user to describe it
-  in free text instead of padding with generic options.
+  in free text instead of padding with generic options. Record the answer as a `said` line
+  (rule below).
+- Decide each Call B option's token patterns when you write the option, before the user
+  answers (`colors.primary`, `typography.display-*.fontFamily`, or `-` for none). After the
+  answer, write one `take` line per picked option and one `decline` line per offered option
+  not picked (format: SKILL.md Step 3). The patterns never widen afterwards.
+- A free-text Other answer is a `said` line in the user's words. Its patterns are written
+  after the answer, so they contain no `*` and name only the tokens for the attribute the
+  user named (`ページ幅もこのサイトに近づけたい` is `spacing.container`), or `-`. A typed
+  literal value (a hex, a font name) is a `user <group>` line instead.
+- Everything after the first `|` on a `take`, `decline` or `said` line is the option text,
+  verbatim: never add a trailing comment there.
 
 ## Step 3b: derivation inputs (one call, three questions, after the last site)
 
@@ -232,6 +251,19 @@ Question 3 (header `明暗`, single-select):
 Skip any question a site pick already answered, and say which pick answered it.
 
 ## Step 4: brief ask
+
+What the brief may contain: the Step 0 answers, the `take` and `said` lines, the `reject` lines, the
+Step 3b answers, and anything the user typed. A declined option never appears in it, not
+even reworded as a proposal.
+Anything the skill adds that the user did not state (a page order, a section nobody picked)
+is a proposal sentence, so the user can see it is not theirs:
+
+```
+ページの順番は、写真、特徴、お客さまの声、お申し込みの順をご提案します。
+```
+
+The user's OK does not turn a proposed or declined value into `chosen`; it stays
+`defaulted` or `derived`.
 
 After the full brief:
 

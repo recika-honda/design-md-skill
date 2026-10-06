@@ -42,9 +42,9 @@ this skill's defaults, the 96px is `defaulted`, and its comment names the pick.
 
 | Tier | When | Comment form |
 |---|---|---|
-| chosen | the user picked this attribute on a site and the value is that site's (from facts.txt or the screenshot), or the user typed the value | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
+| chosen | the user picked the interview option that covers this token on a site (its path matches a `take N` line in picks.txt, or a `said N` line when the user answered in free text) and the value is that site's (from facts.txt or the screenshot), or the user typed the value | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
 | derived | computed mechanically from chosen values by a public rule in sec.1-7 or sec.9 of `references/derivation-rules.md` | `# derived: <rule>, sec.N` e.g. `# derived: M3 tone T90, sec.1` |
-| defaulted | this skill's own recommended value (sec.8 of `derivation-rules.md`), or an "unverified" row used as a stated choice; it yields to any chosen value or a reason in Intent | `# defaulted: <row>, sec.8` plus `; for pick "<pick>", site N` when a pick triggered it |
+| defaulted | this skill's own recommended value (sec.8 of `derivation-rules.md`), or an "unverified" row used as a stated choice, or a value the skill supplies to realize a pick that has no literal value on the site ("device fonts" written as `system-ui`); it yields to any chosen value or a reason in Intent | `# defaulted: <row>, sec.8` plus `; for pick "<pick>", site N` when a pick triggered it; a value supplied for a pick with no sec.8 row: `# defaulted: <what>; for pick "<option text>", site N`, the text copied exactly from a `take N` or `said N` line |
 | open | no chosen input, no rule and no default can bridge the gap | in `colors` / `typography` / `spacing` / `rounded`: OMIT the key and leave a comment line `# <key>: open (TODO: decide), see Known Gaps` (the linter rejects a placeholder value); in body prose: the literal `TODO: decide` |
 
 Every leaf value in `colors`, `typography`, `rounded`, `spacing`, `elevation`, `motion` and
@@ -533,8 +533,10 @@ Heuristics and defaulted > prose) and will silently pick one side.
 ## Self-check before writing the file
 
 Mechanical checks first: run `scripts/check-design-md.sh <draft> <workdir>/picks.txt` (SKILL.md
-Step 5). It fails on a token without a tier comment, a `chosen` token whose site and bundle
-are not in picks.txt, a `derived` token citing sec.8, a hex inside `components`, and a
+Step 5). It fails on a token without a tier comment, a `chosen: site N` token whose path
+matches no `take N` or `said N` line in picks.txt (naming the declined option when it
+matches a `decline` line instead), a `for pick "<option text>"` that quotes no `take` or
+`said` line, a `derived` token citing sec.8, a hex inside `components`, and a
 missing or duplicated required heading. Fix every FAIL line, rerun until it exits 0.
 
 Then the judgment checks the script cannot make:
@@ -542,8 +544,12 @@ Then the judgment checks the script cannot make:
 - Hard Baseline present verbatim; no later section contradicts it (no text under 14px,
   placeholders never labels, contrast floors met).
 - Layout Heuristics edited where a pick overrides one, with the reason in Intent.
-- No value is `chosen` unless the user picked that attribute AND the value came from the
-  site or the user; a pick realized with a skill number is `defaulted`.
+- For each `decline` line in picks.txt: its content is absent from the Brief, Page
+  Structure, Components, and Imagery, unless a `said` line asks for it.
+- No value is `chosen` unless the user picked the option that covers it AND the value came
+  from the site or the user; a pick realized with a skill number is `defaulted`. A declined
+  option, or a value the user approved only as a proposal in the brief, is never `chosen`.
+- Every `reject` line in picks.txt appears in `Do's and Don'ts` and in `Sources`.
 - Contrast table present, every text pair >= 4.5:1 or explicitly noted as large text 3:1.
 - No reference site named outside `Sources` and `Intent`.
 - No copied sentence, image URL, or logo from any site.

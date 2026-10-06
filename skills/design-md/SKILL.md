@@ -32,10 +32,12 @@ Bundled files, read on demand. Every path below is relative to this skill's base
 - Do NOT write DESIGN.md until the user has said OK to the Japanese brief. The brief is the
   contract. A file written before the OK is a guess with a filename.
 - Do NOT invent a token value, and do NOT pass your taste off as theirs. Every value
-  belongs to one of four tiers: `chosen` (the user picked it on a site, or typed it),
-  `derived` (computed mechanically from chosen values by a public rule cited from
-  `references/derivation-rules.md`), `defaulted` (this skill's recommended value, sec.8,
-  which yields to any choice), or `open` (`TODO: decide`). A value with no tier comment is an
+  belongs to one of four tiers: `chosen` (the user picked the interview option that covers
+  it on a site, or typed it), `derived` (computed mechanically from chosen values by a public
+  rule cited from `references/derivation-rules.md`), `defaulted` (this skill's recommended
+  value, sec.8, which yields to any choice; also a value the skill supplies to realize a pick
+  that has no literal value on the site, written `# defaulted: <what>; for pick "<option
+  text>", site N`), or `open` (`TODO: decide`). A value with no tier comment is an
   invention; a skill default labeled `chosen` is a forgery. Both are unforgivable.
 - Do NOT ship a thin file, and do NOT pad one. The file meets the completeness bar in
   `references/output-template.md`: every section filled with substance, components only
@@ -107,18 +109,25 @@ Japanese sentence for each is in `references/interview.md`, section "Fetch error
 
 ### Step 3: Interview, one site at a time
 
-Two `AskUserQuestion` calls per site, exactly as laid out in `references/interview.md`
-section "Step 3":
+Two or three `AskUserQuestion` calls per site, exactly as laid out in
+`references/interview.md` section "Step 3":
 
 - Call A: one multi-select question, "what did you like about this site", four bundles:
   structure and layout / a specific section or component / colors and type / mood,
   whitespace, motion, imagery. Options are the bundles; the Other field is free text.
-- Call B: one question per bundle the user picked (max 4 questions in the one call). Each
-  question's options are 3-4 CONCRETE things you observed on THAT site in Step 2, phrased so
-  the user recognizes them (the three-column comparison right under the hero; the heavy
-  serif headings in `Playfair Display`; almost only white and black with one accent color).
-  Never generic options. Add one final question when there is room: what on this site
-  they would NOT want to imitate.
+- Call B: one question per bundle the user picked. Each question's options are 3-4
+  CONCRETE things you observed on THAT site in Step 2, phrased so the user recognizes them
+  (the three-column comparison right under the hero; the heavy serif headings in
+  `Playfair Display`; almost only white and black with one accent color). Never generic
+  options. If the user picked 3 bundles or fewer, the last question of Call B is the avoid
+  question below.
+- Call C, only when the user picked all four bundles (Call B is then full, since the tool
+  allows 4 questions per call): one call holding only the avoid question.
+- The avoid question is mandatory for every site: what on this site they would NOT want to
+  imitate. Multi-select; its options are 3 things observed on THAT site that people
+  commonly dislike (an autoplay video, a newsletter popup, a wall of customer logos) plus
+  `特にない`. Every answer other than `特にない` is a `reject` line and must appear in the
+  brief's "do not" part, in DESIGN.md `Do's and Don'ts`, and in `Sources` (rejected: ...).
 
 Decision rule for the option text: if the user could not point at it on the live page, it
 is too abstract. Rewrite it.
@@ -132,16 +141,41 @@ prove which values the user actually chose:
 ```
 site 1 https://example.com      # once per site, numbered as in Step 1
 pick 1 color-type               # each Call A bundle the user ticked: structure | component | color-type | mood
-note 1 almost only white and black with one accent   # each Call B option picked (free text)
-reject 1 the autoplay hero video                     # each "would not imitate" answer
+pick 1 structure
+# take / decline / said lines carry no trailing comment: everything after | is option text
+take 1 color-type colors.primary | ほぼ白と黒だけで、アクセントは 1 色 (#E24A33 の赤)
+decline 1 color-type typography.display-*.fontFamily | 見出しの太いセリフ体 (Playfair Display)
+take 1 structure - | 上部メニューが少なく 4 項目だけ
+said 1 structure spacing.container | ページ幅もこのサイトに近づけたい
+reject 1 冒頭で自動再生される動画         # each avoid-question answer except 特にない
 user colors                     # the user typed a value for this token group (a hex, a font name)
 ```
 
-A bundle grants its token groups to `chosen: site N`: `structure` -> spacing, breakpoints;
-`component` -> rounded, elevation, spacing; `color-type` -> colors, typography; `mood` ->
-spacing, rounded, elevation, motion. `user <group>` grants that group to `chosen: user`.
-Step 3b feel answers are not `user` lines: they select a sec.8 default, so the values they
-produce are `defaulted`.
+When Call B is answered, write one `take` line for each offered option the user picked and
+one `decline` line for each option that was offered and not picked:
+`<take|decline> <N> <bundle> <patterns> | <option text>`. A free-text Other answer is a
+`said` line, in the user's words: `said <N> <bundle> <patterns> | <the user's words>`.
+`<patterns>` is a comma-separated list, no spaces, of the token paths the option covers,
+named as the validator names them: `<group>.<key>` or `<group>.<role>.<prop>`, `*`
+matching any run of characters (`colors.primary`, `colors.*`,
+`typography.display-*.fontFamily`, `spacing.container,spacing.gutter`, `rounded.*`); the
+group part is always written out, never `*`. An option that covers no token (page structure, mood wording) uses `-`. Decide an offered option's
+patterns when you write the option, before the user answers, and never widen them
+afterwards: they are the only thing that makes a value `chosen: site N`. A `said` line's
+patterns can only be written after the answer, so they are held tighter: no `*`, and only
+the tokens for the attribute the user named in their words (`ページ幅` names
+`spacing.container`, not `spacing.*`), or `-`. A token is `chosen: site N` only when its
+path matches a pattern of a `take N` or `said N` line; a path that matches only a
+`decline` line was offered and refused, so it is `derived` or `defaulted`. A path covered
+by both a `take` and a `decline` is not `chosen` either, unless a `said` line also covers
+it: words the user typed outrank an option they left unticked.
+A typed literal value (a hex, a font name) is not a `said` line but a `user <group>` line,
+which covers that whole group for `chosen: user`. Step 3b feel answers are not `user`
+lines: they select a sec.8 default, so the values they produce are `defaulted`.
+Everything after the first `|` is option text, verbatim, so a `take`, `decline` or `said`
+line never carries a trailing comment. A `defaulted ...; for pick "<option text>", site N`
+comment quotes the option text of a `take N` or `said N` line exactly, so option text
+never contains a straight double quote (use the Japanese corner brackets instead).
 
 ### Step 3b: Derivation inputs (once, after the last site)
 
@@ -163,6 +197,17 @@ bullet list. Title it exactly `【あなたの欲しいサイトイメージを�
 5. Details worth protecting: whitespace, motion, imagery, the "do not" list.
 6. One closing sentence that says what this site will feel like to a first-time visitor,
    built around the one thing they should remember (Step 0).
+
+The brief is built only from the Step 0 answers, the `take` and `said` lines, the `reject` lines, the
+Step 3b answers, and anything the user typed. A declined option never appears in it, not
+even reworded as a proposal: the user saw it and left it unticked. The same holds for
+DESIGN.md: a declined option is not built as a section, a component, or a rule, unless a
+`said` line (the user's own words) asks for it. Before showing the brief, re-read
+`<workdir>/picks.txt` and check the brief describes THIS user's site, line by line.
+Anything you add that the user did not state (a page order, a section nobody picked) is
+written as an explicit proposal sentence (`〜をご提案します`). Approving the brief does
+NOT upgrade a proposed or declined value to `chosen`: its tier stays `defaulted` or
+`derived`.
 
 Then ask, in chat, one line (phrasing in `references/interview.md`, section "Brief ask"):
 is this right, write corrections as free text, or reply OK.
@@ -223,10 +268,14 @@ praise of the user's taste.
 
 - Asking "what do you like about it" with no options. The options are the product.
 - Options that are generic design vocabulary instead of things seen on that page.
-- Writing `chosen` tokens for a bundle the user never chose, because the extractor found
+- Writing `chosen` tokens for a bundle or option the user never chose, because the extractor found
   values. (Deriving them from what WAS chosen, with a citation, is the correct move.)
 - Labeling a skill default `chosen` because the user picked the attribute it serves. The
   attribute is theirs; the number is the skill's: `defaulted`.
+- Re-adding a declined option through the brief: the user did not pick the narrow column,
+  the brief mentions it anyway, the OK arrives, and the value comes back as `chosen`. A
+  declined option stays out of the brief; a value approved only as your proposal stays
+  `defaulted` or `derived`.
 - Letting Layout Heuristics flatten a pick: three very different reference sets that come
   out as the same container, the same section rhythm, the same alignment.
 - Every section one-lined: a file nobody can build from. Its mirror image: components and

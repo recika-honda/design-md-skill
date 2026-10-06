@@ -1,6 +1,10 @@
-# fixture: one site, colors and type picked, one typed font
+# fixture: one site, structure and colors-and-type picked, one typed font
 site 1 https://example.com
+pick 1 structure
 pick 1 color-type
-note 1 almost only white and black with one accent
+take 1 structure - | only four items in the top menu
+decline 1 structure spacing.container | one narrow centered column with wide side margins
+take 1 color-type colors.primary | almost only white and black with one accent (#24363f)
+decline 1 color-type typography.*.fontFamily | the heavy serif headings (Playfair Display)
 reject 1 the autoplay hero video
 user typography

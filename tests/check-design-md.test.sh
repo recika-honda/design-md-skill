@@ -63,11 +63,22 @@ mutate() {
   printf '%s' "$path"
 }
 
-# picks_with <name> <extra line>: copy picks.txt with one line appended, print the path.
+# picks_with <name> <extra line>...: copy picks.txt with the lines appended, print the path.
 picks_with() {
   local path="$work/$1.txt"
+  shift
   cp "$picks" "$path"
-  printf '%s\n' "$2" >>"$path"
+  printf '%s\n' "$@" >>"$path"
+  printf '%s' "$path"
+}
+
+# picks_edit <name> <sed expression> [extra line...]: copy picks.txt with one change and the
+# lines appended, print the path.
+picks_edit() {
+  local path="$work/$1.txt" expr=$2
+  shift 2
+  sed "$expr" "$picks" >"$path"
+  if [ "$#" -gt 0 ]; then printf '%s\n' "$@" >>"$path"; fi
   printf '%s' "$path"
 }
 
@@ -99,17 +110,113 @@ expect "derived without a citation fails" 1 "derived without a rule citation" --
   "$(mutate derived-bare 's|# derived: M3 short4, sec.5|# derived: M3 short4|')" "$picks"
 expect "defaulted without sec.8 fails" 1 "defaulted must cite sec.8" -- \
   "$(mutate defaulted-bare 's|# defaulted: container and side margins, sec.8|# defaulted: looks calm|')" "$picks"
+expect "defaulted for a pick on a listed site passes without sec.8" 0 "check: PASS" -- \
+  "$(mutate defaulted-pick 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "only four items in the top menu", site 1|')" "$picks"
+expect "defaulted for a pick on a site picks.txt does not list fails" 1 "defaulted for a pick on site 2, which picks.txt does not list" -- \
+  "$(mutate defaulted-pick-site2 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "only four items in the top menu", site 2|')" "$picks"
+expect "defaulted for a pick without a site fails" 1 "write the pick as for pick" -- \
+  "$(mutate defaulted-pick-nosite 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "only four items in the top menu"|')" "$picks"
+expect "defaulted for a pick quoting no option on the site fails" 1 \
+  "defaulted for pick \"anything at all\", site 1, but no picked option on site 1 has that text" -- \
+  "$(mutate defaulted-pick-invented 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "anything at all", site 1|')" "$picks"
+expect "defaulted for a pick quoting a declined option fails" 1 "but that option was offered there and not picked (a decline line)" -- \
+  "$(mutate defaulted-pick-declined 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "one narrow centered column with wide side margins", site 1|')" "$picks"
+expect "defaulted for a pick quote is compared after trimming" 0 "check: PASS" -- \
+  "$(mutate defaulted-pick-trim 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "  only four items in the top menu ", site 1|')" "$picks"
+expect "defaulted for a pick quoting a said answer passes" 0 "check: PASS" -- \
+  "$(mutate defaulted-pick-said 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "ページ幅は広すぎないように", site 1|')" \
+  "$(picks_with defaulted-pick-said 'said 1 structure - | ページ幅は広すぎないように')"
+expect "without picks.txt a pick quote is checked for form only" 0 "check: PASS" -- \
+  "$(mutate defaulted-pick-nopicks 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "anything at all", site 1|')"
 expect "chosen naming neither site nor user fails" 1 "chosen must name" -- \
   "$(mutate chosen-vague 's|# chosen: site 1 (example.com)|# chosen: primary on accent|')" "$picks"
 
 # ---- provenance against picks.txt ----
 expect "chosen from a site picks.txt does not list fails" 1 "chosen from site 2, which picks.txt does not list" -- \
   "$(mutate site2 's|# chosen: site 1 (example.com)|# chosen: site 2 (other.com)|')" "$picks"
-expect "chosen from a site whose picked bundles do not cover the group fails" 1 "the user picked no bundle there that covers motion" -- \
-  "$(mutate wrong-bundle 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" "$picks"
-expect "the same token passes once the covering bundle is picked" 0 "check: PASS" -- \
-  "$(mutate wrong-bundle-ok 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
-  "$(picks_with mood 'pick 1 mood')"
+expect "chosen that no picked option covers fails" 1 "no picked option on site 1 covers it" -- \
+  "$(mutate no-take 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" "$picks"
+expect "the same token passes once a picked option covers it" 0 "check: PASS" -- \
+  "$(mutate no-take-ok 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
+  "$(picks_with mood 'pick 1 mood' 'take 1 mood motion.* | elements fade in on scroll')"
+expect "chosen from an option offered and not picked fails" 1 \
+  "the user was offered this there and did not pick it (declined: \"one narrow centered column with wide side margins\")" -- \
+  "$(mutate declined 's|# defaulted: container and side margins, sec.8|# chosen: site 1 (example.com)|')" "$picks"
+expect "a declined nested path matched by a wildcard fails as declined" 1 \
+  "typography.body-lg.fontFamily: chosen from site 1, but the user was offered this there" -- \
+  "$(mutate declined-nested 's|# chosen: user$|# chosen: site 1 (example.com)|')" "$picks"
+expect "a path covered by a picked and a declined option fails" 1 \
+  "it is covered by a picked option (\"the light sans body text (Noto Sans JP)\") and a declined option (\"the heavy serif headings (Playfair Display)\"); where the two overlap the truthful tier is derived or defaulted" -- \
+  "$(mutate take-overlap 's|# chosen: user$|# chosen: site 1 (example.com)|')" \
+  "$(picks_with take-overlap 'take 1 color-type typography.body-*.fontFamily | the light sans body text (Noto Sans JP)')"
+expect "a wildcard take covers a nested typography path" 0 "check: PASS" -- \
+  "$(mutate take-nested 's|# chosen: user$|# chosen: site 1 (example.com)|')" \
+  "$(picks_edit take-nested '/typography[.][*][.]fontFamily/d' 'take 1 color-type typography.body-*.fontFamily | the light sans body text (Noto Sans JP)')"
+expect "a wildcard take is anchored and does not cover a sibling role" 1 "but the user was offered this there" -- \
+  "$(mutate take-sibling 's|# chosen: user$|# chosen: site 1 (example.com)|')" \
+  "$(picks_with take-sibling 'take 1 color-type typography.display-*.fontFamily | the giant thin headline')"
+expect "a take with - patterns covers no token" 1 "no picked option on site 1 covers it" -- \
+  "$(mutate dash-take 's|# derived: Tailwind md, sec.3|# chosen: site 1 (example.com)|')" "$picks"
+expect "a take on another site does not cover site 1" 1 "no picked option on site 1 covers it" -- \
+  "$(mutate other-site 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
+  "$(picks_with other-site 'site 2 https://example.org' 'pick 2 mood' 'take 2 mood motion.* | elements fade in on scroll')"
+expect "a hex and a # after the bar stay option text" 1 \
+  "(declined: \"the red accent #E24A33 (#c0392b) # Call B, colors\")" -- \
+  "$(mutate declined-hex 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
+  "$(picks_with declined-hex 'decline 1 color-type motion.* | the red accent #E24A33 (#c0392b) # Call B, colors')"
+expect "option text that starts with # is kept" 0 "check: PASS" -- \
+  "$good" "$(picks_with hash-text 'take 1 structure - | # just a heading')"
+expect "a trailing comment on a take line is part of its option text" 1 \
+  "defaulted for pick \"a short menu\", site 1, but no picked option on site 1 has that text" -- \
+  "$(mutate pick-comment 's|# defaulted: container and side margins, sec.8|# defaulted: 1120px; for pick "a short menu", site 1|')" \
+  "$(picks_with pick-comment 'take 1 structure - | a short menu   # Call B')"
+expect "take without its pick bundle line fails" 1 "take 1 mood: no \"pick 1 mood\" line" -- \
+  "$good" "$(picks_with take-no-pick 'take 1 mood motion.* | elements fade in on scroll')"
+expect "said with a wildcard fails" 1 "said: pattern \"colors.*\" has a *" -- \
+  "$good" "$(picks_with said-wild 'said 1 color-type colors.* | x')"
+expect "said covers its tokens for chosen like take" 0 "check: PASS" -- \
+  "$(mutate said-chosen 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
+  "$(picks_with said-chosen 'pick 1 mood' 'said 1 mood motion.duration-short | 動きはこのサイトくらい短く')"
+expect "said with - covers no token" 1 "no picked option on site 1 covers it" -- \
+  "$(mutate said-dash 's|# derived: M3 short4, sec.5|# chosen: site 1 (example.com)|')" \
+  "$(picks_with said-dash 'pick 1 mood' 'said 1 mood - | 動きはこのサイトくらい短く')"
+expect "said without its pick bundle line fails" 1 "said 1 mood: no \"pick 1 mood\" line" -- \
+  "$good" "$(picks_with said-no-pick 'said 1 mood motion.duration-short | 動きは短く')"
+expect "said outranks a declined option on the same token" 0 "check: PASS" -- \
+  "$(mutate said-overlap 's|# defaulted: container and side margins, sec.8|# chosen: site 1 (example.com)|')" \
+  "$(picks_with said-overlap 'said 1 structure spacing.container | ページ幅もこのサイトに近づけたい')"
+expect "said on a token no option declined passes" 0 "check: PASS" -- \
+  "$(mutate said-container 's|# defaulted: container and side margins, sec.8|# chosen: site 1 (example.com)|')" \
+  "$(picks_edit said-container '/^decline 1 structure spacing[.]container/d' 'said 1 structure spacing.container | ページ幅もこのサイトに近づけたい')"
+expect "a trailing comma in patterns fails" 1 "bad token pattern \"\" (an empty element; remove the stray comma)" -- \
+  "$good" "$(picks_with empty-tail 'take 1 color-type colors.primary, | the accent')"
+expect "an empty element between commas fails" 1 "bad token pattern \"\" (an empty element; remove the stray comma)" -- \
+  "$good" "$(picks_with empty-mid 'take 1 color-type colors.primary,,colors.on-primary | the accent')"
+expect "a list of patterns covers each listed token" 0 "check: PASS" -- \
+  "$(mutate two-patterns 's|# derived: M3 on-primary T100, sec.1|# chosen: site 1 (example.com)|')" \
+  "$(picks_with two-patterns 'take 1 color-type colors.primary,colors.on-primary | white text on the accent')"
+expect "a two-part typography pattern without * fails" 1 \
+  "bad token pattern \"typography.body-lg\" (covers no property; write typography.body-lg.* or name the property" -- \
+  "$good" "$(picks_with typo-two 'take 1 color-type typography.body-lg | the body text')"
+expect "a typography role pattern ending in * covers its properties" 0 "check: PASS" -- \
+  "$(mutate typo-star 's|# derived: M3 body-large, sec.2|# chosen: site 1 (example.com)|')" \
+  "$(picks_with typo-star 'take 1 color-type typography.body-lg.* | the body text size')"
+expect "records naming a site with no site line fail, one each" 1 "check: FAIL (5 failures)" -- \
+  "$good" "$(picks_with no-site2 'pick 2 mood' 'take 2 mood - | a' 'decline 2 mood - | b' 'said 2 mood - | c' 'reject 2 the popup')"
+expect "a reject naming a site with no site line says which line is missing" 1 "reject 2: no \"site 2 <url>\" line" -- \
+  "$good" "$(picks_with no-site2-reject 'reject 2 the popup')"
+expect "the same records pass once the site is listed" 0 "check: PASS" -- \
+  "$good" "$(picks_with site2 'site 2 https://example.org' 'pick 2 mood' 'take 2 mood - | a' 'decline 2 mood - | b' 'said 2 mood - | c' 'reject 2 the popup')"
+expect "take with an unknown bundle fails" 1 "unknown bundle \"layout\"" -- \
+  "$good" "$(picks_with take-bad-bundle 'take 1 layout spacing.* | wide side margins')"
+expect "take without option text fails" 1 "take needs <N> <bundle> <patterns> | <option text>" -- \
+  "$good" "$(picks_with take-no-text 'take 1 color-type colors.primary')"
+expect "take with a pattern that names no key fails" 1 "bad token pattern \"colors\"" -- \
+  "$good" "$(picks_with take-bad-pattern 'take 1 color-type colors | the accent')"
+expect "take with a wildcard group fails" 1 "bad token pattern \"*.primary\"" -- \
+  "$good" "$(picks_with take-wild-group 'take 1 color-type *.primary | the accent')"
+expect "note record fails with a hint to use take" 1 "\"note\" is no longer a record; write each picked option as \"take" -- \
+  "$good" "$(picks_with note 'note 1 almost only white and black')"
 expect "chosen: userland is not chosen: user" 1 "chosen must name" -- \
   "$(mutate userland 's|# chosen: user$|# chosen: userland guess|')" "$picks"
 expect "chosen: user without a user line fails" 1 "picks.txt has no \"user colors\" line" -- \

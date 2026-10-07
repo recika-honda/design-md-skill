@@ -91,8 +91,26 @@ For each URL, in order:
    parts they care about, saying it is optional (phrasing: `references/interview.md`,
    section "Screenshot ask"). A pasted image is read with `Read`.
 4. Build a short internal summary per site: 3-6 observed section patterns, 2-4 dominant
-   colors with hex, 1-2 font families, radius and spacing feel, overall mood in one line.
+   colors with hex, 1-2 font families, radius and spacing feel, overall mood in one line,
+   every number and hex read from the source the order below gives.
    This summary feeds the option sets in Step 3. It is not shown to the user.
+
+Which source a value comes from (one fixed order):
+1. The rendered page. When a browser tool that reports computed styles is available in this
+   session, measure at a 1440px-wide viewport in the site's default color scheme, on the
+   element the option names: the main content wrapper's width and side padding, the body
+   text and background color, the primary button or link color, the heading and body
+   font-family. It is what the user saw when they said they liked it, so it wins.
+2. `facts.txt`: what the stylesheets declare, ranked by frequency. It cannot see values set
+   at runtime, and its most frequent color is not necessarily the one on screen. Used when
+   no rendered measurement exists; where a screenshot exists, a `facts.txt` value goes into
+   an option only if it agrees with the screenshot. Two values tied on frequency: the one
+   listed first.
+3. WebFetch prose and a screenshot read by eye never produce a number or a hex.
+Never mix two sources for one value, and never average. Each site is read from one source,
+recorded in DESIGN.md `Sources` (`measured: rendered page at 1440px` or `measured: static
+CSS (facts.txt)`); a site read from static CSS only is also listed in Known Gaps ("values
+read from static CSS; runtime theme not observed").
 
 Error paths for `fetch-site.sh` (the script exits non-zero and prints a one-word reason on
 stderr; every path continues to WebFetch and the questions, never stops the run). The exact
@@ -159,7 +177,11 @@ one `decline` line for each option that was offered and not picked:
 named as the validator names them: `<group>.<key>` or `<group>.<role>.<prop>`, `*`
 matching any run of characters (`colors.primary`, `colors.*`,
 `typography.display-*.fontFamily`, `spacing.container,spacing.gutter`, `rounded.*`); the
-group part is always written out, never `*`. An option that covers no token (page structure, mood wording) uses `-`. Decide an offered option's
+group part is always written out, never `*`. An option that covers no token (page structure, mood wording) uses `-`.
+An option's patterns cover every token group its words name ("no shadows, no rounded
+corners, no animation" covers `elevation.*,rounded.*,motion.*`); a page-width option covers
+`spacing.container,spacing.page-margin` when the site's side padding was measured, because
+the two together are the width the user saw. Decide an offered option's
 patterns when you write the option, before the user answers, and never widen them
 afterwards: they are the only thing that makes a value `chosen: site N`. A `said` line's
 patterns can only be written after the answer, so they are held tighter: no `*`, and only
@@ -231,7 +253,8 @@ After the OK, and only then:
    recommendations (grid, container, reading column, section rhythm) that yield to the
    user's picks and to Intent; it ranks with the defaulted tokens, below everything the
    user chose and everything derived from it.
-2. Token tiers: fill `chosen` tokens from the picks and `facts.txt`, then run the derivation
+2. Token tiers: fill `chosen` tokens from the picks, each value read from the source Step 2
+   names for that site (the rendered page, else `facts.txt`), then run the derivation
    recipe (end of `derivation-rules.md`) to fill every `derived` token with its rule
    citation and every `defaulted` token with its sec.8 row, then list what remains as
    `open`. Ask one question before writing if, and only if, no primary color or no font
@@ -276,6 +299,13 @@ praise of the user's taste.
   the brief mentions it anyway, the OK arrives, and the value comes back as `chosen`. A
   declined option stays out of the brief; a value approved only as your proposal stays
   `defaulted` or `derived`.
+- Letting a skill heuristic overrule the user's words: the user asked for a calm, paper-like
+  background, and a sec.7 ban ("Don't swap the white surface for a cream paper tone") or any
+  other skill default took it away. A `(skill heuristic)` line that bans what a `take` or
+  `said` line, a chosen token, or the brief asks for is left out.
+- Filling elevation levels and motion durations from the rule tables for a user who picked
+  no shadows and no animation. Each group holds one token (`none`, `0ms`), and its section
+  says what carries depth and feedback instead.
 - Letting Layout Heuristics flatten a pick: three very different reference sets that come
   out as the same container, the same section rhythm, the same alignment.
 - Every section one-lined: a file nobody can build from. Its mirror image: components and

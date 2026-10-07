@@ -105,7 +105,7 @@ expect "flow-map token fails" 1 "typography.body-lg: flow map" -- \
   "$(mutate flow '/^  body-lg:$/,/^    lineHeight/d; s|^typography:$|typography:\
   body-lg: {fontSize: 16px, lineHeight: 1.75}   # derived: M3 body-large, sec.2|')" "$picks"
 expect "flow-sequence token fails" 1 "rounded.none: flow map or list" -- \
-  "$(mutate flow-seq 's|^  none: 0 .*|  none: [0, 1]                        # derived: M3 shape none, sec.4|')" "$picks"
+  "$(mutate flow-seq 's|^  none: 0px .*|  none: [0, 1]                        # derived: M3 shape none, sec.4|')" "$picks"
 expect "derived without a citation fails" 1 "derived without a rule citation" -- \
   "$(mutate derived-bare 's|# derived: M3 short4, sec.5|# derived: M3 short4|')" "$picks"
 expect "defaulted without sec.8 fails" 1 "defaulted must cite sec.8" -- \
@@ -237,6 +237,73 @@ expect "duplicate heading fails" 1 "duplicate heading \"## Overview\"" -- \
   "$(mutate dup-heading 's|^## Shapes$|## Overview|')" "$picks"
 expect "unclosed front matter fails" 1 "front matter is not closed" -- \
   "$(mutate unclosed '/^---$/{x;s/^/x/;/^xx$/{x;d;};x;}')" "$picks"
+
+# ---- lengths carry a unit ----
+expect "unitless rounded length fails" 1 "rounded.none: length without a unit (0); write it with a unit, e.g. 0px" -- \
+  "$(mutate unitless 's|^  none: 0px |  none: 0   |')" "$picks"
+expect "quoted unitless rounded length fails" 1 "rounded.none: length without a unit (\"0\")" -- \
+  "$(mutate unitless-quoted 's|^  none: 0px |  none: "0" |')" "$picks"
+expect "unitless spacing length fails" 1 "spacing.section: length without a unit (96)" -- \
+  "$(mutate unitless-spacing 's|^  section: 96px |  section: 96   |')" "$picks"
+expect "unitless typography values are not lengths and pass" 0 "check: PASS" -- \
+  "$(mutate typo-unitless 's|^    lineHeight: 1.75 .*|&\
+    letterSpacing: 0                  # derived: DADS display tracking 0, sec.9\
+    fontWeight: "400"                 # derived: M3 regular 400, sec.2|')" "$picks"
+
+# ---- achromatic neutrals ----
+expect "achromatic comment on a tinted hex fails" 1 \
+  "colors.surface-container: the tier comment says achromatic, but \"#f0ecf4\" is not a pure gray hex (R = G = B)" -- \
+  "$(mutate achromatic-tinted 's|^  # warning: open.*|&\
+  surface-container: "#f0ecf4"        # derived: neutral T94, sec.1; achromatic neutrals defaulted, sec.8|')" "$picks"
+expect "achromatic comment on a tinted 3-digit hex fails" 1 "colors.surface-container: the tier comment says achromatic, but \"#efe\"" -- \
+  "$(mutate achromatic-tinted3 's|^  # warning: open.*|&\
+  surface-container: "#efe"           # derived: neutral T94, sec.1; achromatic neutrals defaulted, sec.8|')" "$picks"
+expect "achromatic comment on a pure gray passes" 0 "check: PASS" -- \
+  "$(mutate achromatic-gray 's|^  # warning: open.*|&\
+  surface-container: "#f4f4f4"        # derived: neutral T94, sec.1; achromatic neutrals defaulted, sec.8|')" "$picks"
+expect "achromatic comment on an uppercase 3-digit gray passes" 0 "check: PASS" -- \
+  "$(mutate achromatic-gray3 's|^  # warning: open.*|&\
+  surface-container: "#EEE"           # derived: neutral T94, sec.1; achromatic neutrals defaulted, sec.8|')" "$picks"
+expect "a tinted hex without the word achromatic passes" 0 "check: PASS" -- \
+  "$(mutate tinted-plain 's|^  # warning: open.*|&\
+  surface-container: "#f0ecf4"        # derived: neutral T94, sec.1|')" "$picks"
+
+# ---- page margin beside a chosen container ----
+pm_picks=$(picks_edit pm-take '/^decline 1 structure spacing[.]container/d' 'take 1 structure spacing.container | the wide 1344px page')
+expect "defaulted fluid margin beside a chosen container fails on the margin line" 1 \
+  ":21: spacing.page-margin: a defaulted fluid margin (clamp(24px, 6vw, 96px)) beside a chosen spacing.container narrows the width the user picked" -- \
+  "$(mutate pm-fluid 's|^  container: 1120px .*|  container: 1344px                  # chosen: site 1 (example.com)\
+  page-margin: clamp(24px, 6vw, 96px) # defaulted: container and side margins, sec.8|')" "$pm_picks"
+expect "a percent margin written before the chosen container fails too" 1 \
+  ":20: spacing.page-margin: a defaulted fluid margin (5%)" -- \
+  "$(mutate pm-percent-first 's|^  container: 1120px .*|  page-margin: 5%                     # defaulted: container and side margins, sec.8\
+  container: 1344px                  # chosen: site 1 (example.com)|')" "$pm_picks"
+expect "fixed 24px defaulted margin beside a chosen container passes" 0 "check: PASS" -- \
+  "$(mutate pm-fixed 's|^  container: 1120px .*|  container: 1344px                  # chosen: site 1 (example.com)\
+  page-margin: 24px                   # defaulted: page margin beside a chosen container, sec.8|')" "$pm_picks"
+expect "the clamp beside the defaulted container passes" 0 "check: PASS" -- \
+  "$(mutate pm-default 's|^  container: 1120px .*|&\
+  page-margin: clamp(24px, 6vw, 96px) # defaulted: container and side margins, sec.8|')" "$picks"
+expect "a chosen fluid margin beside a chosen container passes" 0 "check: PASS" -- \
+  "$(mutate pm-chosen 's|^  container: 1120px .*|  container: 1344px                  # chosen: site 1 (example.com)\
+  page-margin: clamp(24px, 5vw, 64px) # chosen: site 1 (example.com)|')" \
+  "$(picks_edit pm-take-both '/^decline 1 structure spacing[.]container/d' 'take 1 structure spacing.container,spacing.page-margin | the wide 1344px page with its side padding')"
+
+# ---- Sources record where values were measured ----
+expect "a Sources item without measured: fails" 1 "Sources item 1: no \"measured:\"" -- \
+  "$(mutate src-unmeasured 's| ; measured: static CSS (facts.txt)||')" "$picks"
+expect "measured: on a continuation line passes" 0 "check: PASS" -- \
+  "$(mutate src-continued 's| ; measured: static CSS (facts.txt)|\
+   measured: static CSS (facts.txt)|')" "$picks"
+expect "measured: after a blank line no longer belongs to the item" 1 "Sources item 1: no \"measured:\"" -- \
+  "$(mutate src-blank 's| ; measured: static CSS (facts.txt)|\
+\
+   measured: static CSS (facts.txt)|')" "$picks"
+expect "a second Sources item without measured: is named" 1 "Sources item 2: no \"measured:\"" -- \
+  "$(mutate src-second 's|^1[.] example[.]com.*|&\
+2. example.org : taken: nothing ; rejected: nothing|')" "$picks"
+expect "Sources with no numbered item passes" 0 "check: PASS" -- \
+  "$(mutate src-none 's|^1[.] example[.]com.*|No reference sites were given.|')" "$picks"
 
 # ---- file handling ----
 crlf="$work/crlf.md"

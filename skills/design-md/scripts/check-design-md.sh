@@ -17,6 +17,14 @@
 #     (the user's own words) also covers it. `chosen: user`
 #     needs a `user <group>` line.
 #   - no hex value inside `components`
+#   - a `rounded` or `spacing` length carries a unit (`0px`, not `0` or "0"): the Google
+#     linter silently drops a unitless length; typography values are not checked
+#   - a `colors` value whose tier comment contains the word `achromatic` is a pure gray hex
+#     (3 or 6 digits, R = G = B)
+#   - a defaulted `spacing.page-margin` holding `vw` or `%` is never set beside a chosen
+#     `spacing.container`: the fluid margin narrows the width the user picked (key order free)
+#   - every numbered item in `## Sources` (one per reference site, running to the next item,
+#     a blank line or a heading) says where its values were read: `measured:`
 #   - every required body heading appears exactly once, and no `##` heading is duplicated
 #
 # picks.txt (written during the interview, SKILL.md Step 3), one fact per line:
@@ -123,6 +131,23 @@ function said_for(s, path,   j, r) {
 # Remember that a record names site s, so END can fail it when no `site s` line exists
 # (checked there so the order of lines in picks.txt is free).
 function needs_site(kind, s) { n_ref++; ref_kind[n_ref] = kind; ref_site[n_ref] = s; ref_line[n_ref] = FNR }
+
+# 1 when v (quotes allowed) is a 3- or 6-digit hex with R = G = B, else 0.
+function is_pure_gray(v,   h) {
+  h = tolower(v); gsub(/["\047]/, "", h)
+  if (h ~ /^#[0-9a-f][0-9a-f][0-9a-f]$/)
+    return substr(h, 2, 1) == substr(h, 3, 1) && substr(h, 3, 1) == substr(h, 4, 1)
+  if (h ~ /^#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]$/)
+    return substr(h, 2, 2) == substr(h, 4, 2) && substr(h, 4, 2) == substr(h, 6, 2)
+  return 0
+}
+
+# End the open `## Sources` item, failing it when none of its lines said `measured:`.
+function close_source_item() {
+  if (src_item != "" && !src_measured)
+    fail(design_name, src_line, "Sources item " src_item ": no \"measured:\"; say where this site\047s values were read (measured: rendered page at 1440px | static CSS (facts.txt))")
+  src_item = ""; src_measured = 0
+}
 
 BEGIN {
   failures = 0; n_chosen = 0; n_derived = 0; n_defaulted = 0; n_open = 0
@@ -245,7 +270,21 @@ in_fm {
   if (parent != "") key = parent "." key
 
   if (bare ~ /:[ \t]*[{[]/) { fail(design_name, FNR, top "." key ": flow map or list; write it in block form, one property per line, each with its own tier"); next }
+  # The value as written (quotes kept), cut where bare was cut so the comment is not in it.
+  ci = index(bare, ":"); val = trim(substr(raw, ci + 1, length(bare) - ci))
+  # The Google linter silently drops a unitless length (rounded.none: 0), and every
+  # {rounded.none} reference then breaks. Typography (lineHeight, letterSpacing) is not a length.
+  if ((top == "rounded" || top == "spacing") && val ~ /^["\047]?-?([0-9]+|[0-9]*[.][0-9]+)["\047]?$/)
+    fail(design_name, FNR, top "." key ": length without a unit (" val "); write it with a unit, e.g. 0px")
   if (comment == "") { fail(design_name, FNR, top "." key ": no tier comment (chosen | derived | defaulted)"); next }
+
+  # Remembered for END: a defaulted fluid page margin beside a chosen container, in either order.
+  tier = comment; sub(/:.*/, "", tier)
+  if (top "." key == "spacing.container") container_tier = tier
+  if (top "." key == "spacing.page-margin") { margin_tier = tier; margin_value = val; margin_line = FNR }
+  # A comment that says achromatic promises a gray with no hue (sec.8 neutral palette seed).
+  if (top == "colors" && tolower(comment) ~ /(^|[^a-z])achromatic([^a-z]|$)/ && !is_pure_gray(val))
+    fail(design_name, FNR, top "." key ": the tier comment says achromatic, but " val " is not a pure gray hex (R = G = B); seed the neutral palette at chroma 0 or drop the word")
 
   if (comment ~ /^chosen:/) {
     n_chosen++
@@ -306,6 +345,15 @@ in_fm {
   h = substr($0, 4); h = trim(h)
   if (h in seen) fail(design_name, FNR, "duplicate heading \"## " h "\"")
   seen[h]++
+  close_source_item(); in_sources = (h == "Sources")
+  next
+}
+
+# Sources: a numbered item runs to the next numbered item, a blank line, or a heading.
+!in_fence && in_sources {
+  if ($0 ~ /^[0-9]+[.] /) { close_source_item(); src_item = $0; sub(/[.].*/, "", src_item); src_line = FNR }
+  else if ($0 ~ /^#/ || trim($0) == "") { close_source_item(); next }
+  if (src_item != "" && index($0, "measured:")) src_measured = 1
 }
 
 END {
@@ -317,6 +365,11 @@ END {
     if (rec_side[r] == "picked" && !((rec_site[r], rec_bundle[r]) in picked))
       fail(picks_name, rec_line[r], rec_kind[r] " " rec_site[r] " " rec_bundle[r] ": no \"pick " rec_site[r] " " rec_bundle[r] "\" line; an option belongs to a bundle the user ticked in Call A")
   if (!fm_done || in_fm) fail(design_name, NR, "front matter is not closed with ---")
+  close_source_item()
+  # The sec.8 clamp is tuned to the default 1120 container; beside a chosen container its
+  # vw step cuts into the width the user picked.
+  if (container_tier == "chosen" && margin_tier == "defaulted" && margin_value ~ /vw|%/)
+    fail(design_name, margin_line, "spacing.page-margin: a defaulted fluid margin (" margin_value ") beside a chosen spacing.container narrows the width the user picked; use the fixed 24px (sec.8, page margin beside a chosen container) or the site\047s measured side padding")
   for (i = 1; i <= n_required; i++) if (!(required[i] in seen)) fail(design_name, 0, "missing required heading \"## " required[i] "\"")
   printf "check: %s (%d failures); chosen %d, derived %d, defaulted %d, open %d\n", (failures ? "FAIL" : "PASS"), failures, n_chosen, n_derived, n_defaulted, n_open
   exit (failures ? 1 : 0)

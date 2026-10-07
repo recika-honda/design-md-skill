@@ -13,7 +13,7 @@ typography:
     fontSize: 16px                    # derived: M3 body-large, sec.2
     lineHeight: 1.75                  # defaulted: Japanese body line-height, sec.8
 rounded:
-  none: 0                             # derived: M3 shape none, sec.4
+  none: 0px                           # derived: M3 shape none, sec.4
   md: 12px                            # derived: M3 shape medium, sec.4; feel "soft" row is the sec.8 default
 spacing:
   section: 96px                       # defaulted: section padding by feel, sec.8; for feel "airy"
@@ -72,7 +72,7 @@ x
 ## Intent
 x
 ## Sources
-x
+1. example.com : taken: one accent color ; rejected: the autoplay hero video ; measured: static CSS (facts.txt)
 ## Iteration Guide
 x
 ## Known Gaps

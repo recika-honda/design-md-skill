@@ -24,6 +24,13 @@ The file must have:
 - A spacing scale of 8 steps plus `section`, `gutter`, `container`.
 - Elevation levels 0 to 5 with CSS shadow values; motion durations (short / medium / long)
   and 3 easings; 4 breakpoints and a responsive table with one row per breakpoint.
+  Exception: when a `take` or `said` line rules shadows or motion out, that group holds one
+  token (`elevation.level0: none`, `motion.duration-short: 0ms`), and the `Elevation &
+  Depth` or `Motion` body section (still present; no `##` section is deleted) says what
+  carries depth and feedback instead (borders, surface tone, an instant color change). That
+  token is `chosen: site N` when the picked option's patterns cover the group and the site
+  itself shows none; otherwise `# defaulted: no shadows; for pick "<option text>", site N`
+  (or `no motion`).
 - Components that exist on THIS site: the ones the user picked, plus the ones the Page
   Structure actually uses. `nav`, `footer`, and `button-primary` are on almost every site;
   `button-secondary`, `text-input`, `card` and the rest appear only when Page Structure has
@@ -42,14 +49,14 @@ this skill's defaults, the 96px is `defaulted`, and its comment names the pick.
 
 | Tier | When | Comment form |
 |---|---|---|
-| chosen | the user picked the interview option that covers this token on a site (its path matches a `take N` line in picks.txt, or a `said N` line when the user answered in free text) and the value is that site's (from facts.txt or the screenshot), or the user typed the value | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
+| chosen | the user picked the interview option that covers this token on a site (its path matches a `take N` line in picks.txt, or a `said N` line when the user answered in free text) and the value is that site's, read from one source in the SKILL.md Step 2 order (the rendered page at 1440px, else facts.txt; a screenshot read by eye never gives a number or hex), or the user typed the value | `# chosen: site 2 (airbnb.com)` or `# chosen: user` |
 | derived | computed mechanically from chosen values by a public rule in sec.1-7 or sec.9 of `references/derivation-rules.md` | `# derived: <rule>, sec.N` e.g. `# derived: M3 tone T90, sec.1` |
 | defaulted | this skill's own recommended value (sec.8 of `derivation-rules.md`), or an "unverified" row used as a stated choice, or a value the skill supplies to realize a pick that has no literal value on the site ("device fonts" written as `system-ui`); it yields to any chosen value or a reason in Intent | `# defaulted: <row>, sec.8` plus `; for pick "<pick>", site N` when a pick triggered it; a value supplied for a pick with no sec.8 row: `# defaulted: <what>; for pick "<option text>", site N`, the text copied exactly from a `take N` or `said N` line |
 | open | no chosen input, no rule and no default can bridge the gap | in `colors` / `typography` / `spacing` / `rounded`: OMIT the key and leave a comment line `# <key>: open (TODO: decide), see Known Gaps` (the linter rejects a placeholder value); in body prose: the literal `TODO: decide` |
 
 Every leaf value in `colors`, `typography`, `rounded`, `spacing`, `elevation`, `motion` and
 `breakpoints` carries its own trailing comment, including repeated ones (a `fontFamily`
-repeated in every role, `none: 0`). Trailing comments add no lines, and the validator
+repeated in every role, `none: 0px`). Trailing comments add no lines, and the validator
 (`scripts/check-design-md.sh`) checks each one.
 
 Rules:
@@ -84,6 +91,8 @@ Rules:
   component properties, and the extra token groups. Errors are never accepted.
 - Colors are lowercase hex in quotes. Font families are plain names in YAML with the fallback
   stack in the body prose.
+- Lengths in `rounded` and `spacing` always carry a unit, zero included (`0px`): the Google
+  linter silently drops a unitless length, and every `{rounded.none}` reference then breaks.
 - The body never names a reference site in Overview through Accessibility. Attribution lives
   in `Sources` and `Intent`. The consuming AI should read the system as the user's own.
 
@@ -116,6 +125,7 @@ colors:
   tertiary: "<hex>"                   # derived: Tonal Spot tertiary T40, sec.1
   on-tertiary: "<hex>"                # derived: M3 tone T100, sec.1
   # surfaces
+  # neutral seed (derivation-rules sec.8 "Neutral palette seed"): append "; achromatic neutrals defaulted, sec.8" or "; neutral palette seeded from the chosen surface, sec.8"
   surface: "<hex>"                    # derived: neutral T98, sec.1
   surface-dim: "<hex>"                # derived: neutral T87, sec.1
   surface-bright: "<hex>"             # derived: neutral T98, sec.1
@@ -156,7 +166,7 @@ typography:
     letterSpacing: <em>                # derived: DADS step 0 / 0.01em / 0.02em, sec.9
   # label-md and caption: 14px minimum (Hard Baseline; DADS, sec.9)
 rounded:
-  none: 0                              # derived: M3 shape none, sec.4
+  none: 0px                            # derived: M3 shape none, sec.4
   sm: <px>                             # derived: M3 shape row, sec.4; feel-to-row mapping defaulted, sec.8
   md: <px>                             # derived: M3 shape row, sec.4
   lg: <px>                             # derived: M3 shape row, sec.4
@@ -175,10 +185,11 @@ spacing:
   section: <px>                        # defaulted: section padding by feel, sec.8; for feel "<answer>"
   gutter: 24px                         # defaulted: grid gutter, sec.8
   container: <px>                      # chosen: site N (a picked site's width) | defaulted: 1120px, sec.8
-  page-margin: clamp(24px, 6vw, 96px)  # defaulted: container and side margins, sec.8
+  page-margin: <value>                 # defaulted: container and side margins, sec.8 (clamp(24px, 6vw, 96px), with the default container) | defaulted: page margin beside a chosen container, sec.8 (24px) | chosen: site N (the site's measured side padding)
   content-wide: <px>                   # derived: DADS 8-col offset column in the container, sec.9 (740px at 1120); reading, FAQ, forms
   content-narrow: <px>                 # derived: DADS 6-col offset column, sec.9 (548px at 1120); single-column forms, short statements
 elevation:
+  # shadows ruled out by a take or said line: this group is only `level0: none` (completeness bar exception)
   level0: none                         # derived: M3 level0, sec.4
   level1: "<css shadow>"               # derived: Tailwind shadow-xs, sec.4
   level2: "<css shadow>"               # derived: Tailwind shadow-sm, sec.4
@@ -186,6 +197,7 @@ elevation:
   level4: "<css shadow>"               # derived: Tailwind shadow-lg, sec.4
   level5: "<css shadow>"               # derived: Tailwind shadow-xl, sec.4
 motion:
+  # motion ruled out by a take or said line: this group is only `duration-short: 0ms` (completeness bar exception)
   duration-short: 200ms                # derived: M3 short4, sec.5
   duration-medium: 300ms               # derived: M3 medium2, sec.5
   duration-long: 500ms                 # derived: M3 long2, sec.5
@@ -229,8 +241,9 @@ components:
 ## Agent Guide
 <8-12 lines addressed to the AI that will build the site. Reading order: Hard Baseline
 first, then Intent, then tokens, then Components, then Layout Heuristics. Priority when
-rules conflict: Hard Baseline > Intent and Do's and Don'ts > chosen tokens > derived tokens
-> Layout Heuristics and defaulted tokens > body prose. How to treat `TODO: decide` (ask the
+rules conflict: Hard Baseline > Intent and the Do's and Don'ts that come from picks and
+rejections > chosen tokens > derived tokens > Layout Heuristics, defaulted tokens and
+`(skill heuristic)` Do's and Don'ts > body prose. How to treat `TODO: decide` (ask the
 owner, never guess). Which token groups are chosen, derived, or defaulted, so the AI knows
 what is sacred (chosen), what follows from it (derived), and what is only a recommendation
 (defaulted). One line on the one thing to make memorable (Step 0).>
@@ -436,7 +449,7 @@ policy; heading order>
 - **Do** <...> (4-8 lines)
 ### Don't:
 - **Don't** <rule from the user's "would not imitate" answers>
-- **Don't** <generic-AI-look bans from derivation-rules sec.7 that apply to this mood>
+- **Don't** <generic-AI-look bans from derivation-rules sec.7 that apply to this mood and that nothing the user picked or said contradicts, tagged `(skill heuristic)`>
 - **Don't** <...> (4-8 lines)
 
 ## Intent
@@ -446,9 +459,9 @@ open. Which token groups are chosen, derived, or defaulted, and which heuristics
 it so an AI with no other context could rebuild the choices.>
 
 ## Sources
-1. <domain of site 1> : taken: <one line> ; rejected: <one line or "nothing">
-2. <domain of site 2> : ...
-3. <domain of site 3> : ...
+1. <domain of site 1> : taken: <one line> ; rejected: <one line or "nothing"> ; measured: <rendered page at 1440px | static CSS (facts.txt)>
+2. <domain of site 2> : ... ; measured: <rendered page at 1440px | static CSS (facts.txt)>
+3. <domain of site 3> : ... ; measured: <rendered page at 1440px | static CSS (facts.txt)>
 Rules cited for derived values: `references/derivation-rules.md` of the design-md skill
 (Material 3 color and type roles, WCAG 2.2, Tailwind scales, Anthropic frontend-design).
 
@@ -461,8 +474,9 @@ change); what never changes without a new interview (the Intent section)>
 
 ## Known Gaps
 <bullet list of what this file does not cover and why: states not observable, dark scheme
-not chosen, components the site will need that no reference showed, every `TODO: decide`
-with the question the owner must answer>
+not chosen, components the site will need that no reference showed, every site read from
+static CSS only ("values read from static CSS; runtime theme not observed"), every
+`TODO: decide` with the question the owner must answer>
 
 ## Brief (Japanese)
 <the signed-off brief, verbatim, including its title line>
@@ -478,18 +492,22 @@ with the question the owner must answer>
    builders follow a style section over a baseline when the two disagree.
    The Layout Heuristics section is copied too, then edited: every heuristic that a pick or
    Intent overrides is rewritten to the chosen behavior (and Intent says so), not left
-   standing next to its contradiction. Derived values follow the heuristics only where no
+   standing next to its contradiction (a pick that rules out shadows removes "Hover raises
+   elevation one level; dialogs sit at least two levels up" from Control Conventions).
+   Derived values follow the heuristics only where no
    chosen value disagrees (M3 tracking snapped to 0 / 0.01em / 0.02em unless the user chose
    a tracked display face).
-1. Chosen tokens first, from the interview picks and `facts.txt`.
+1. Chosen tokens first, from the interview picks; each value read from one source in the
+   SKILL.md Step 2 order (the rendered page at 1440px, else `facts.txt`), never mixed or
+   averaged.
 2. Derived tokens, group by group, following the recipe at the end of
    `references/derivation-rules.md` (palettes, roles, contrast check, states, type scale,
    spacing, radii, elevation, breakpoints, motion).
 3. Layout and Page Structure from the WebFetch section list plus picks.
 4. Components: the ones Page Structure uses, then every picked one, each with states.
 5. Interaction States matrix, Motion, Responsive, Imagery, Voice, Accessibility.
-6. Do's and Don'ts from picks and rejections first, then the sec.7 bans that fit, each
-   tagged `(skill heuristic)`. The Step 0 "memorable thing" is the one place boldness is spent.
+6. Do's and Don'ts from picks and rejections first, then the sec.7 bans that fit and that
+   nothing the user picked or said contradicts, each tagged `(skill heuristic)`. The Step 0 "memorable thing" is the one place boldness is spent.
 7. Agent Guide and Overview last, so they summarize rather than promise.
 8. Intent, Sources, Iteration Guide, Known Gaps, Brief.
 
@@ -497,8 +515,9 @@ with the question the owner must answer>
 
 Each pair below is a contradiction that can live between two sections that are
 individually fine. Check every pair below before writing; a builder follows the
-priority order (Hard Baseline > Intent and Do's and Don'ts > chosen > derived > Layout
-Heuristics and defaulted > prose) and will silently pick one side.
+priority order (Hard Baseline > Intent and the Do's and Don'ts that come from picks and
+rejections > chosen tokens > derived tokens > Layout Heuristics, defaulted tokens and
+`(skill heuristic)` Do's and Don'ts > body prose) and will silently pick one side.
 
 - Nav width budget: at 320px, logo + primary CTA (label at label-lg plus 2 x 24px padding)
   + menu button + gaps must fit inside 320 - 2 x gutter. If not, write the narrow-width rule
@@ -536,8 +555,11 @@ Mechanical checks first: run `scripts/check-design-md.sh <draft> <workdir>/picks
 Step 5). It fails on a token without a tier comment, a `chosen: site N` token whose path
 matches no `take N` or `said N` line in picks.txt (naming the declined option when it
 matches a `decline` line instead), a `for pick "<option text>"` that quotes no `take` or
-`said` line, a `derived` token citing sec.8, a hex inside `components`, and a
-missing or duplicated required heading. Fix every FAIL line, rerun until it exits 0.
+`said` line, a `derived` token citing sec.8, a hex inside `components`, a defaulted fluid
+`spacing.page-margin` (`vw` or `%`) beside a chosen `spacing.container`, a numbered `Sources`
+item without `measured:`, a `colors` value whose comment says `achromatic` but that is not
+a pure gray hex, a unitless length in `rounded` or `spacing`, and a missing or duplicated
+required heading. Fix every FAIL line, rerun until it exits 0.
 
 Then the judgment checks the script cannot make:
 - Completeness bar met; no section one-lined; no component the site will not have.
@@ -550,6 +572,10 @@ Then the judgment checks the script cannot make:
   from the site or the user; a pick realized with a skill number is `defaulted`. A declined
   option, or a value the user approved only as a proposal in the brief, is never `chosen`.
 - Every `reject` line in picks.txt appears in `Do's and Don'ts` and in `Sources`.
+- No `(skill heuristic)` line bans something a `take` or `said` line, a chosen token, or the
+  Brief asks for.
+- A pick that rules out shadows or motion: no shadow other than `none`, no duration above
+  0ms, and nothing in Components, Interaction States or Motion adds one.
 - Contrast table present, every text pair >= 4.5:1 or explicitly noted as large text 3:1.
 - No reference site named outside `Sources` and `Intent`.
 - No copied sentence, image URL, or logo from any site.

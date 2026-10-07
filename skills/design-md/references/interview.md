@@ -198,7 +198,9 @@ and appears in the brief's "do not" part, in DESIGN.md `Do's and Don'ts`, and in
 Rules for building options:
 - Each option is one thing, nameable, visible on the page. Not "good hierarchy".
 - Include the concrete value in parentheses when it is a color or font, so the user learns
-  the vocabulary while choosing.
+  the vocabulary while choosing. The value comes from the source order in SKILL.md Step 2
+  (the rendered page, else facts.txt, and a facts.txt value only if it agrees with the
+  screenshot when one exists), never from a screenshot read by eye.
 - If Step 2 produced fewer than 3 observations for a bundle, ask the user to describe it
   in free text instead of padding with generic options. Record the answer as a `said` line
   (rule below).
@@ -206,6 +208,10 @@ Rules for building options:
   answers (`colors.primary`, `typography.display-*.fontFamily`, or `-` for none). After the
   answer, write one `take` line per picked option and one `decline` line per offered option
   not picked (format: SKILL.md Step 3). The patterns never widen afterwards.
+- An option's patterns cover every token group its words name: "no shadows, no rounded
+  corners, no animation" covers `elevation.*,rounded.*,motion.*`. A page-width option
+  covers `spacing.container,spacing.page-margin` when the site's side padding was measured,
+  because the two together are the width the user saw.
 - A free-text Other answer is a `said` line in the user's words. Its patterns are written
   after the answer, so they contain no `*` and name only the tokens for the attribute the
   user named (`ページ幅もこのサイトに近づけたい` is `spacing.container`), or `-`. A typed
@@ -249,6 +255,9 @@ Question 3 (header `明暗`, single-select):
 ```
 
 Skip any question a site pick already answered, and say which pick answered it.
+
+A `take` or `said` line that asks for little or no color sets the neutral palette seed
+(derivation-rules sec.8 "Neutral palette seed") without a question.
 
 ## Step 4: brief ask
 
